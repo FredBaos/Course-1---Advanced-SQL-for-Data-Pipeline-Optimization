@@ -1,4 +1,6 @@
-# Capstone Project — Level Up: Advanced SQL for Data Engineering
+# Capstone Project — Course 1 - Advanced SQL for Data Pipeline Optimization
+
+This project has been built as inspiration from the first course of the Coursera "Level Up: Advanced SQL for Data Engineering" certification: "Advanced SQL for Data Pipeline Optimization".
 
 A running project built up module by module across the specialization. Each
 module's concept gets applied here as a real piece of the pipeline, instead
@@ -13,8 +15,9 @@ logic yet). That's intentional: the mess is the point, and future modules
 clean it up.
 
 ```
-Capstone Project/
+.
 ├── dbt_project.yml / profiles.yml   # DuckDB, local, self-contained
+├── requirements.txt                 # pinned Python deps (dbt-duckdb)
 ├── seeds/
 │   ├── crm_customers.csv            # source A — see "Known issues" below
 │   ├── ecommerce_customers.csv      # source B — conflicts with A
@@ -27,17 +30,59 @@ Capstone Project/
     └── stg_customer_events.sql      # flattens JSON via read_json_auto
 ```
 
-## One-time per terminal session
+## Setting up the project from scratch
+
+These steps take you from a fresh clone to a working local pipeline. You
+only need to do this once per machine (or whenever `.venv` gets wiped).
+
+**Prerequisites:** Python 3.9+ and git.
+
+1. **Get the code.**
+   ```bash
+   git clone https://github.com/FredBaos/Course-1---Advanced-SQL-for-Data-Pipeline-Optimization.git
+   cd "Course-1---Advanced-SQL-for-Data-Pipeline-Optimization"
+   ```
+
+2. **Create and activate a virtual environment.**
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate          # Windows: .venv\Scripts\activate
+   ```
+
+3. **Install dependencies.**
+   ```bash
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+   This installs `dbt-duckdb`, which pulls in `dbt-core` and `duckdb` as
+   transitive dependencies — no separate database server to install or run.
+
+4. **Verify the dbt profile resolves.**
+   ```bash
+   dbt debug --profiles-dir .
+   ```
+   `profiles.yml` lives in the project root (not `~/.dbt/`), so every dbt
+   command in this repo needs `--profiles-dir .`. It points at a local
+   `dev.duckdb` file that dbt creates on first run — no credentials needed.
+
+5. **Load the seeds and build the models.**
+   ```bash
+   dbt seed --profiles-dir .
+   dbt run  --profiles-dir .
+   dbt show --select stg_customer_events --profiles-dir .   # spot-check
+   ```
+
+At this point `dev.duckdb` contains the raw seeds plus the staging views
+described below. `dev.duckdb`, `.venv/`, `target/`, and `logs/` are all
+gitignored — they're regenerated locally and never committed.
+
+## Day-to-day (after initial setup)
+
+Once `.venv` exists, each new terminal session just needs:
 
 ```bash
-cd "Capstone Project"
 source .venv/bin/activate
-```
-
-```bash
-dbt seed --profiles-dir .
-dbt run  --profiles-dir .
-dbt show --select stg_customer_events --profiles-dir .   # spot-check
+dbt run --profiles-dir .
 ```
 
 ## Known issues in the raw data (deliberate — this is the point)
