@@ -1,0 +1,20 @@
+name: 'capstone_pipeline'
+version: '1.0.0'
+config-version: 2
+
+profile: 'capstone_pipeline'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  capstone_pipeline:
+    staging:
+      +materialized: view

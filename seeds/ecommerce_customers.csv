@@ -1,0 +1,41 @@
+ecommerce_customer_id,full_name,email_address,phone_number,country,created_at
+EC-2000,Grace Sato,GRACE.SATO43@EXAMPLE.COM,9395741319,USA,2022-06-03
+EC-2001,Zane Cohen,zane.cohen20@example.com,,USA,2023-09-19
+EC-2002,Frank Dubois,frank.dubois8@example.com,729-838-5840,USA,2023-02-03
+EC-2003,Frank Ivanov,frank.ivanov10@example.com,(434) 307-2377,Canada,2022-06-24
+EC-2004,David Muller,david.muller24@example.com,2409973974,USA,2022-12-04
+EC-2005,Ines Smith,ines.smith42@example.com,,USA,2022-07-11
+EC-2006,Hassan Kim,HASSAN.KIM17@EXAMPLE.COM,749-727-9103,USA,2022-07-31
+EC-2007,Katya Haddad,katya.haddad9@example.com,(485) 258-4003,USA,2022-05-31
+EC-2008,Grace Silva,grace.silva30@example.com,4752172451,USA,2022-05-14
+EC-2009,Mona Brown,mona.brown15@example.com,,USA,2022-05-25
+EC-2010,Bob Rossi,bob.rossi7@example.com,664-211-6556,USA,2022-07-03
+EC-2011,Alice Rossi,alice.rossi26@example.com,(836) 332-1707,USA,2022-11-30
+EC-2012,Vera Silva,VERA.SILVA32@EXAMPLE.COM,3654681825,Mexico,2022-06-21
+EC-2013,Sam Ivanov,sam.ivanov11@example.com,,Mexico,2022-09-23
+EC-2014,Tara Kim,tara.kim22@example.com,656-712-3914,Mexico,2022-12-22
+EC-2015,Rosa Khan,rosa.khan27@example.com,(218) 456-1605,USA,2023-02-19
+EC-2016,Priya Ivanov,priya.ivanov45@example.com,9507174104,Canada,2022-03-19
+EC-2017,Tara Rossi,tara.rossi6@example.com,,USA,2022-11-07
+EC-2018,Grace Cohen,GRACE.COHEN23@EXAMPLE.COM,602-718-6042,USA,2023-09-11
+EC-2019,Priya Silva,priya.silva14@example.com,(550) 403-3289,Mexico,2022-10-22
+EC-2020,Rosa Kim,rosa.kim39@example.com,2553321233,USA,2023-02-19
+EC-2021,Tara Haddad,tara.haddad13@example.com,,Canada,2022-11-17
+EC-2022,Frank Park,frank.park33@example.com,718-886-5619,Canada,2023-03-26
+EC-2023,Yara Garcia,yara.garcia34@example.com,(246) 670-4036,Mexico,2022-12-26
+EC-2024,Priya Kim,PRIYA.KIM35@EXAMPLE.COM,6562035312,Mexico,2022-12-01
+EC-2025,Carla Sato,carla.sato12@example.com,,USA,2023-01-31
+EC-3000,Bob Khan,bob.khan.web0@example.com,387-201-6494,Mexico,2023-07-02
+EC-3001,Mona Garcia,mona.garcia.web1@example.com,(714) 871-4292,USA,2023-05-23
+EC-3002,Hassan Nguyen,hassan.nguyen.web2@example.com,2913477545,Canada,2023-05-16
+EC-3003,Tara Smith,tara.smith.web3@example.com,,USA,2023-01-12
+EC-3004,Carla Kim,carla.kim.web4@example.com,533-937-9096,USA,2024-01-27
+EC-3005,Elena Khan,elena.khan.web5@example.com,(932) 725-8032,Mexico,2023-01-23
+EC-3006,Yara Kim,yara.kim.web6@example.com,7989284767,Canada,2023-12-18
+EC-3007,Carla Nguyen,carla.nguyen.web7@example.com,,Canada,2023-03-10
+EC-3008,Mona Haddad,mona.haddad.web8@example.com,219-841-9707,Canada,2023-11-18
+EC-3009,Will Dubois,will.dubois.web9@example.com,(203) 667-2148,USA,2023-05-16
+EC-3010,Yara Garcia,yara.garcia.web10@example.com,9546855131,Canada,2024-01-17
+EC-3011,Carla Sato,carla.sato.web11@example.com,,Mexico,2024-01-09
+EC-2003,Frank Ivanov,frank.ivanov10@example.com,(434) 307-2377,Canada,2022-06-24
+EC-2010,Bob Rossi,bob.rossi7@example.com,664-211-6556,USA,2022-07-03

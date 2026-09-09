@@ -1,0 +1,182 @@
+[
+  {
+    "event_id": "evt_2024-01-14_0",
+    "customer_id": 9992,
+    "event_type": "logout",
+    "event_ts": "2024-01-14T05:34:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_1",
+    "customer_id": 1011,
+    "event_type": "logout",
+    "event_ts": "2024-01-14T10:29:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_2",
+    "customer_id": 1030,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-14T11:27:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_3",
+    "customer_id": 1012,
+    "event_type": "login",
+    "event_ts": "2024-01-14T20:23:00",
+    "metadata": {
+      "device": "mobile",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_4",
+    "customer_id": 1044,
+    "event_type": "add_to_cart",
+    "event_ts": "2024-01-14T23:59:00",
+    "metadata": {
+      "device": "mobile",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_5",
+    "customer_id": 1032,
+    "event_type": "page_view",
+    "event_ts": "2024-01-14T04:02:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_6",
+    "customer_id": 1041,
+    "event_type": "login",
+    "event_ts": "2024-01-14T04:21:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_7",
+    "customer_id": 1022,
+    "event_type": "logout",
+    "event_ts": "2024-01-14T15:49:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_8",
+    "customer_id": 1019,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-14T13:21:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_9",
+    "customer_id": 9992,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-14T09:22:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_10",
+    "customer_id": 1033,
+    "event_type": "logout",
+    "event_ts": "2024-01-14T08:55:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_11",
+    "customer_id": 1042,
+    "event_type": "login",
+    "event_ts": "2024-01-14T15:50:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_12",
+    "customer_id": 1021,
+    "event_type": "page_view",
+    "event_ts": "2024-01-14T22:19:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_13",
+    "customer_id": 1003,
+    "event_type": "logout",
+    "event_ts": "2024-01-14T12:46:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_14",
+    "customer_id": 1026,
+    "event_type": "login",
+    "event_ts": "2024-01-14T09:06:00",
+    "metadata": {
+      "device": "mobile",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_15",
+    "customer_id": 1031,
+    "event_type": "login",
+    "event_ts": "2024-01-14T19:49:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_16",
+    "customer_id": 1040,
+    "event_type": "logout",
+    "event_ts": "2024-01-14T04:40:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-14_17",
+    "customer_id": 1014,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-14T01:42:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Mexico"
+    }
+  }
+]

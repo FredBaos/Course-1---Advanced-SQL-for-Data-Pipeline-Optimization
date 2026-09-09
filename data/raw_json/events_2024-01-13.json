@@ -1,0 +1,212 @@
+[
+  {
+    "event_id": "evt_2024-01-13_0",
+    "customer_id": 9991,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-13T00:04:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_1",
+    "customer_id": 1038,
+    "event_type": "page_view",
+    "event_ts": "2024-01-13T08:06:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_2",
+    "customer_id": 1034,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-13T07:51:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_3",
+    "customer_id": 1011,
+    "event_type": "login",
+    "event_ts": "2024-01-13T04:59:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_4",
+    "customer_id": 1031,
+    "event_type": "page_view",
+    "event_ts": "2024-01-13T20:35:00",
+    "metadata": {
+      "device": "mobile",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_5",
+    "customer_id": 1043,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-13T20:53:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_6",
+    "customer_id": 1036,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-13T20:08:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_7",
+    "customer_id": 1018,
+    "event_type": "add_to_cart",
+    "event_ts": "2024-01-13T22:24:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_8",
+    "customer_id": 1031,
+    "event_type": "add_to_cart",
+    "event_ts": "2024-01-13T00:51:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_9",
+    "customer_id": 9993,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-13T09:20:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_10",
+    "customer_id": 1040,
+    "event_type": "add_to_cart",
+    "event_ts": "2024-01-13T20:05:00",
+    "metadata": {
+      "device": "mobile",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_11",
+    "customer_id": 1025,
+    "event_type": "logout",
+    "event_ts": "2024-01-13T01:05:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_12",
+    "customer_id": 1034,
+    "event_type": "logout",
+    "event_ts": "2024-01-13T11:40:00",
+    "metadata": {
+      "device": "mobile",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_13",
+    "customer_id": 1014,
+    "event_type": "add_to_cart",
+    "event_ts": "2024-01-13T02:41:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_14",
+    "customer_id": 1038,
+    "event_type": "page_view",
+    "event_ts": "2024-01-13T04:54:00",
+    "metadata": {
+      "device": "mobile",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_15",
+    "customer_id": 1023,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-13T04:13:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Mexico"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_16",
+    "customer_id": 1040,
+    "event_type": "login",
+    "event_ts": "2024-01-13T22:38:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_17",
+    "customer_id": 1013,
+    "event_type": "page_view",
+    "event_ts": "2024-01-13T15:44:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_18",
+    "customer_id": 9993,
+    "event_type": "login",
+    "event_ts": "2024-01-13T14:42:00",
+    "metadata": {
+      "device": "tablet",
+      "ip_country": "Canada"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_19",
+    "customer_id": 1017,
+    "event_type": "page_view",
+    "event_ts": "2024-01-13T13:14:00",
+    "metadata": {
+      "device": "desktop",
+      "ip_country": "USA"
+    }
+  },
+  {
+    "event_id": "evt_2024-01-13_20",
+    "customer_id": 1036,
+    "event_type": "checkout_start",
+    "event_ts": "2024-01-13T01:30:00",
+    "metadata": {
+      "device": "mobile",
+      "ip_country": "USA"
+    }
+  }
+]
