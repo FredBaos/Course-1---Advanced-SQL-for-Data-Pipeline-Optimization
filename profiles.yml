@@ -1,0 +1,7 @@
+capstone_pipeline:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: dev.duckdb
+      threads: 4

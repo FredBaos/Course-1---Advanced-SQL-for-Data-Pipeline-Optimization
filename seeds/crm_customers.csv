@@ -1,0 +1,52 @@
+customer_id,first_name,last_name,email,phone,region,signup_date,updated_at
+1001,Katya,Kim,katya.kim1@example.com,(249) 274-9779,West,2023-10-29,2023-11-01
+1002,Liam,Smith,liam.smith2@example.com,2886447851,South,2022-02-08,2022-02-10
+1003,Hassan,Garcia,hassan.garcia3@example.com,,West,2022-03-02,2022-03-22
+1004,Vera,Smith,vera.smith4@example.com,426-247-3181,West,2022-02-20,2022-03-01
+1005,NOAH,KIM,noah.kim5@example.com,(515) 773-3961,North,2023-08-08,2023-08-11
+1006,Tara,Rossi,tara.rossi6@example.com,7609292028,East,2022-04-10,2022-04-28
+1007,bob,rossi,bob.rossi7@example.com,,West,2023-11-28,2023-12-12
+1007,bob,rossi,bob.rossi7@example.com,,East,2023-11-28,2024-04-13
+1008,Frank,Dubois,frank.dubois8@example.com,507-737-9111,North,2023-08-12,2023-09-09
+1009,Katya,Haddad,  katya.haddad9@example.com,(274) 320-9387,East,2023-09-16,2023-09-29
+1010,FRANK,IVANOV,frank.ivanov10@example.com,6312402271,South,2023-05-16,2023-06-09
+1011,Sam,Ivanov,sam.ivanov11@example.com,,,2022-12-25,2022-12-27
+1012,Carla,Sato,carla.sato12@example.com,266-262-6072,West,2023-11-12,2023-12-02
+1013,Tara,Haddad,tara.haddad13@example.com,(884) 555-1369,East,2023-01-31,2023-03-02
+1014,priya,silva,priya.silva14@example.com,3197051965,South,2023-09-18,2023-09-24
+1014,priya,silva,priya.silva14@example.com,3329565056,East,2023-09-18,2024-03-03
+1015,MONA,BROWN,mona.brown15@example.com,,North,2022-06-20,2022-07-18
+1016,Elena,Park,elena.park16@example.com,567-899-7233,East,2023-03-02,2023-04-01
+1017,Hassan,Kim,hassan.kim17@example.com,(354) 437-4822,North,2022-06-30,2022-06-30
+1018,Quinn,Osei,  quinn.osei18@example.com,2043497864,East,2022-10-16,2022-11-02
+1019,Liam,Ivanov,liam.ivanov19@example.com,,South,2023-06-12,2023-06-26
+1020,ZANE,COHEN,zane.cohen20@example.com,603-306-8889,West,2023-02-13,2023-03-05
+1021,mona,smith,mona.smith21@example.com,(413) 651-3659,South,2022-03-10,2022-03-13
+1021,mona,smith,mona.smith21@example.com,(815) 253-2677,East,2022-03-10,2022-05-12
+1022,Tara,Kim,tara.kim22@example.com,8282262152,,2023-01-08,2023-02-04
+1023,Grace,Cohen,grace.cohen23@example.com,,South,2023-10-12,2023-10-27
+1024,David,Muller,david.muller24@example.com,691-695-6109,West,2023-04-23,2023-04-25
+1025,ELENA,MULLER,elena.muller25@example.com,(690) 908-3645,East,2022-09-29,2022-10-15
+1026,Alice,Rossi,alice.rossi26@example.com,9067561443,East,2022-05-31,2022-06-24
+1027,Rosa,Khan,  rosa.khan27@example.com,,North,2022-09-25,2022-10-06
+1028,zane,dubois,zane.dubois28@example.com,428-827-4197,East,2023-10-14,2023-11-08
+1028,zane,dubois,zane.dubois28@example.com,610-957-4714,North,2023-10-14,2024-02-27
+1029,Rosa,Brown,rosa.brown29@example.com,(228) 486-8737,East,2022-01-30,2022-02-07
+1030,GRACE,SILVA,grace.silva30@example.com,5732824612,West,2022-12-24,2022-12-27
+1031,Hassan,Brown,hassan.brown31@example.com,,South,2022-12-12,2022-12-27
+1032,Vera,Silva,vera.silva32@example.com,322-597-4265,North,2023-11-08,2023-11-23
+1033,Frank,Park,frank.park33@example.com,(939) 605-8588,,2022-03-30,2022-04-11
+1034,Yara,Garcia,yara.garcia34@example.com,3302283476,South,2022-06-24,2022-07-12
+1035,PRIYA,KIM,priya.kim35@example.com,,West,2023-11-05,2023-11-22
+1035,PRIYA,KIM,priya.kim35@example.com,,North,2023-11-05,2024-06-03
+1036,Yara,Kim,  yara.kim36@example.com,416-228-5126,West,2022-07-19,2022-07-25
+1037,Jamal,Dubois,jamal.dubois37@example.com,(757) 629-3147,East,2022-09-23,2022-09-24
+1038,Yara,Silva,yara.silva38@example.com,7977297891,West,2023-11-10,2023-12-06
+1039,Rosa,Kim,rosa.kim39@example.com,,South,2023-06-21,2023-07-15
+1040,FRANK,NGUYEN,frank.nguyen40@example.com,344-684-2971,South,2022-06-26,2022-07-13
+1041,Bob,Ivanov,bob.ivanov41@example.com,(773) 258-5071,West,2022-04-19,2022-04-25
+1042,ines,smith,ines.smith42@example.com,6637751456,North,2023-06-04,2023-06-28
+1042,ines,smith,ines.smith42@example.com,6535339282,South,2023-06-04,2024-01-05
+1043,Grace,Sato,grace.sato43@example.com,,West,2023-06-05,2023-07-05
+1044,Hassan,Sato,hassan.sato44@example.com,340-626-2992,,2023-04-04,2023-04-16
+1045,PRIYA,IVANOV,  priya.ivanov45@example.com,(446) 638-2198,North,2023-11-19,2023-11-25

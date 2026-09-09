@@ -1,0 +1,221 @@
+order_id,customer_id,order_date,total_amount,status,product_category
+5000,1042,2024-01-16,48.38,completed,Sporting Goods
+5001,1044,2024-01-15,290.26,pending,Grocery
+5002,1013,2024-01-13,125.46,completed,Home
+5003,1045,2024-01-15,20.42,completed,Apparel
+5004,1004,2024-01-16,316.1,completed,Electronics
+5005,1044,2024-01-16,139.21,completed,Grocery
+5006,1030,2024-01-16,101.67,pending,Grocery
+5007,1006,2024-01-16,48.26,completed,Sporting Goods
+5008,1033,2024-01-16,106.28,cancelled,Sporting Goods
+5009,1014,2024-01-13,340.16,completed,Apparel
+5010,1017,2024-01-15,136.61,completed,Grocery
+5011,1008,2024-01-18,405.5,completed,Sporting Goods
+5012,1032,2024-01-16,428.23,completed,Electronics
+5013,1044,2024-01-16,196.04,completed,Apparel
+5014,1025,2024-01-15,15.76,completed,Home
+5015,1022,2024-01-19,325.17,completed,Apparel
+5016,1019,2024-01-15,184.72,completed,Sporting Goods
+5017,1038,2024-01-13,343.71,completed,Sporting Goods
+5018,1004,2024-01-15,291.21,completed,Home
+5019,1010,2024-01-14,237.27,cancelled,Sporting Goods
+5020,1013,2024-01-19,399.66,completed,Sporting Goods
+5021,1041,2024-01-16,253.91,cancelled,Grocery
+5022,1006,2024-01-13,211.12,cancelled,Sporting Goods
+5023,1009,2024-01-18,36.3,pending,Sporting Goods
+5024,1036,2024-01-14,164.49,completed,Sporting Goods
+5025,1020,2024-01-15,191.7,completed,Home
+5026,1016,2024-01-15,67.09,completed,Sporting Goods
+5027,1042,2024-01-14,409.09,completed,Grocery
+5028,1032,2024-01-17,448.47,completed,Home
+5029,1029,2024-01-16,121.18,completed,Apparel
+5030,1012,2024-01-15,119.02,completed,Home
+5031,1017,2024-01-19,341.1,completed,Electronics
+5032,1027,2024-01-16,106.35,completed,Grocery
+5033,1018,2024-01-15,135.72,pending,Sporting Goods
+5034,1024,2024-01-14,288.89,completed,Grocery
+5035,1014,2024-01-13,182.28,completed,Apparel
+5036,1042,2024-01-16,384.18,completed,Home
+5037,1002,2024-01-14,436.2,completed,Sporting Goods
+5038,1032,2024-01-13,387.13,completed,Grocery
+5039,1029,2024-01-14,82.15,pending,Apparel
+5040,1034,2024-01-18,51.98,completed,Sporting Goods
+5041,1003,2024-01-13,262.68,pending,Apparel
+5042,1003,2024-01-18,287.52,completed,Apparel
+5043,1034,2024-01-18,58.26,completed,Electronics
+5044,1020,2024-01-17,183.82,cancelled,Apparel
+5045,1015,2024-01-19,248.8,completed,Electronics
+5046,1030,2024-01-15,221.76,cancelled,Apparel
+5047,1016,2024-01-17,321.52,completed,Sporting Goods
+5048,1020,2024-01-13,399.91,completed,Sporting Goods
+5049,1042,2024-01-16,305.3,completed,Apparel
+5050,1024,2024-01-14,327.47,completed,Home
+5051,1024,2024-01-18,361.72,completed,Electronics
+5052,1033,2024-01-13,150.6,completed,Apparel
+5053,1013,2024-01-14,345.8,completed,Home
+5054,1019,2024-01-13,280.39,cancelled,Sporting Goods
+5055,1015,2024-01-16,427.71,completed,Electronics
+5056,1010,2024-01-16,438.74,completed,Electronics
+5057,1010,2024-01-16,95.09,completed,Electronics
+5058,1029,2024-01-18,448.93,pending,Electronics
+5059,1011,2024-01-15,339.64,completed,Grocery
+5060,1003,2024-01-15,380.02,completed,Sporting Goods
+5061,1022,2024-01-16,49.04,completed,Electronics
+5062,1006,2024-01-15,259.09,completed,Electronics
+5063,1014,2024-01-16,372.57,completed,Home
+5064,1028,2024-01-13,100.14,completed,Sporting Goods
+5065,1035,2024-01-16,335.73,completed,Home
+5066,1031,2024-01-13,368.14,completed,Apparel
+5067,1026,2024-01-13,42.22,completed,Sporting Goods
+5068,1004,2024-01-15,405.87,completed,Electronics
+5069,1022,2024-01-15,33.96,completed,Grocery
+5070,1045,2024-01-15,16.64,cancelled,Home
+5071,1039,2024-01-19,25.55,completed,Electronics
+5072,1015,2024-01-13,429.95,completed,Sporting Goods
+5073,1025,2024-01-19,369.44,completed,Sporting Goods
+5074,1009,2024-01-16,372.9,completed,Home
+5075,1010,2024-01-17,215.44,completed,Home
+5076,1039,2024-01-13,342.51,completed,Sporting Goods
+5077,1016,2024-01-16,224.54,completed,Electronics
+5078,1035,2024-01-15,399.31,completed,Sporting Goods
+5079,1005,2024-01-15,56.94,completed,Apparel
+5080,1032,2024-01-18,116.88,cancelled,Apparel
+5081,1027,2024-01-16,340.37,completed,Apparel
+5082,1043,2024-01-19,142.8,completed,Home
+5083,1037,2024-01-15,101.65,completed,Home
+5084,1016,2024-01-14,137.39,completed,Apparel
+5085,1038,2024-01-14,124.47,completed,Sporting Goods
+5086,1016,2024-01-17,299.2,completed,Electronics
+5087,1003,2024-01-13,380.64,completed,Apparel
+5088,1024,2024-01-13,66.86,pending,Apparel
+5089,1013,2024-01-17,99.46,cancelled,Grocery
+5090,1005,2024-01-15,210.36,completed,Apparel
+5091,1017,2024-01-19,61.01,pending,Electronics
+5092,1039,2024-01-18,31.29,completed,Apparel
+5093,1022,2024-01-14,31.63,completed,Home
+5094,1042,2024-01-14,192.91,pending,Home
+5095,1024,2024-01-14,103.48,completed,Electronics
+5096,1032,2024-01-17,59.1,completed,Sporting Goods
+5097,1026,2024-01-18,54.65,completed,Grocery
+5098,1011,2024-01-16,444.88,completed,Sporting Goods
+5099,1043,2024-01-15,150.88,completed,Electronics
+5100,1037,2024-01-15,390.95,completed,Electronics
+5101,1024,2024-01-18,103.6,completed,Sporting Goods
+5102,1001,2024-01-16,64.39,cancelled,Sporting Goods
+5103,1006,2024-01-16,215.49,completed,Home
+5104,1011,2024-01-14,76.99,completed,Grocery
+5105,1026,2024-01-13,335.7,completed,Home
+5106,1011,2024-01-14,241.7,completed,Apparel
+5107,1005,2024-01-13,146.2,completed,Apparel
+5108,1003,2024-01-16,417.88,completed,Grocery
+5109,1025,2024-01-13,314.37,cancelled,Grocery
+5110,1011,2024-01-18,285.16,pending,Apparel
+5111,1040,2024-01-19,94.59,completed,Sporting Goods
+5112,1014,2024-01-13,83.07,completed,Grocery
+5113,1023,2024-01-13,32.88,completed,Apparel
+5114,1036,2024-01-19,305.53,pending,Electronics
+5115,1021,2024-01-13,254.27,completed,Sporting Goods
+5116,1041,2024-01-19,149.07,completed,Sporting Goods
+5117,1016,2024-01-16,209.35,completed,Home
+5118,1029,2024-01-14,443.97,completed,Grocery
+5119,1030,2024-01-14,354.29,completed,Grocery
+5120,1030,2024-01-19,189.15,completed,Sporting Goods
+5121,1005,2024-01-14,54.9,completed,Home
+5122,1029,2024-01-17,32.68,completed,Electronics
+5123,1009,2024-01-13,353.27,cancelled,Home
+5124,1033,2024-01-13,404.27,completed,Grocery
+5125,1042,2024-01-19,448.31,completed,Electronics
+5126,1045,2024-01-19,442.05,completed,Apparel
+5127,1032,2024-01-15,313.47,cancelled,Apparel
+5128,1015,2024-01-13,343.94,pending,Grocery
+5129,1011,2024-01-15,408.7,pending,Home
+5130,1030,2024-01-14,105.62,completed,Sporting Goods
+5131,1017,2024-01-17,176.94,completed,Home
+5132,1013,2024-01-14,310.66,completed,Home
+5133,1025,2024-01-14,65.06,pending,Home
+5134,1034,2024-01-13,435.28,completed,Home
+5135,1029,2024-01-17,124.63,completed,Electronics
+5136,1035,2024-01-18,130.17,pending,Home
+5137,1024,2024-01-17,347.62,completed,Home
+5138,1029,2024-01-14,143.93,completed,Electronics
+5139,1034,2024-01-15,418.88,completed,Grocery
+5140,1021,2024-01-18,111.41,completed,Electronics
+5141,1019,2024-01-17,238.01,completed,Sporting Goods
+5142,1004,2024-01-14,299.1,completed,Grocery
+5143,1002,2024-01-13,147.13,completed,Home
+5144,1034,2024-01-15,268.86,completed,Sporting Goods
+5145,1038,2024-01-14,375.39,completed,Grocery
+5146,1011,2024-01-14,322.75,completed,Apparel
+5147,1029,2024-01-13,394.01,completed,Apparel
+5148,1018,2024-01-16,39.42,pending,Electronics
+5149,1036,2024-01-15,208.03,completed,Grocery
+5150,1034,2024-01-18,408.02,completed,Apparel
+5151,1003,2024-01-13,95.76,completed,Sporting Goods
+5152,1011,2024-01-13,20.37,cancelled,Electronics
+5153,1036,2024-01-18,194.73,cancelled,Apparel
+5154,1034,2024-01-17,368.82,completed,Sporting Goods
+5155,1012,2024-01-17,287.29,completed,Home
+5156,1031,2024-01-18,382.33,completed,Sporting Goods
+5157,1030,2024-01-13,91.3,completed,Sporting Goods
+5158,1007,2024-01-15,68.62,completed,Electronics
+5159,1045,2024-01-19,130.7,completed,Electronics
+5160,1036,2024-01-18,437.77,completed,Grocery
+5161,1019,2024-01-18,52.16,cancelled,Apparel
+5162,1033,2024-01-13,381.15,completed,Apparel
+5163,1013,2024-01-14,98.49,completed,Home
+5164,1025,2024-01-15,409.79,completed,Sporting Goods
+5165,1041,2024-01-18,219.23,cancelled,Grocery
+5166,1034,2024-01-18,205.19,completed,Electronics
+5167,1015,2024-01-17,185.33,pending,Apparel
+5168,1038,2024-01-13,77.9,completed,Apparel
+5169,1002,2024-01-13,165.02,completed,Apparel
+5170,1010,2024-01-18,75.2,completed,Electronics
+5171,1042,2024-01-18,335.5,completed,Electronics
+5172,1005,2024-01-19,101.7,completed,Home
+5173,1035,2024-01-18,61.6,completed,Sporting Goods
+5174,1014,2024-01-14,427.92,completed,Electronics
+5175,1041,2024-01-13,222.55,pending,Home
+5176,1009,2024-01-13,143.09,pending,Apparel
+5177,1022,2024-01-16,126.67,completed,Home
+5178,1019,2024-01-13,411.0,completed,Home
+5179,1039,2024-01-17,283.95,completed,Home
+5180,1002,2024-01-19,240.6,completed,Sporting Goods
+5181,1007,2024-01-15,248.98,completed,Electronics
+5182,1014,2024-01-18,264.93,pending,Electronics
+5183,1019,2024-01-14,102.89,completed,Grocery
+5184,1004,2024-01-13,228.8,completed,Electronics
+5185,1012,2024-01-16,128.35,completed,Grocery
+5186,1011,2024-01-15,231.77,pending,Apparel
+5187,1008,2024-01-18,357.74,pending,Sporting Goods
+5188,1045,2024-01-17,169.69,pending,Home
+5189,1026,2024-01-16,198.63,pending,Electronics
+5190,1042,2024-01-13,129.49,completed,Home
+5191,1035,2024-01-17,425.61,completed,Apparel
+5192,1009,2024-01-17,296.14,completed,Grocery
+5193,1023,2024-01-17,392.58,completed,Apparel
+5194,1029,2024-01-18,88.75,completed,Home
+5195,1029,2024-01-18,115.5,pending,Grocery
+5196,1022,2024-01-16,235.85,completed,Apparel
+5197,1018,2024-01-15,82.25,pending,Grocery
+5198,1010,2024-01-14,242.15,completed,Grocery
+5199,1011,2024-01-14,127.53,completed,Apparel
+5200,1007,2024-01-14,100.01,cancelled,Electronics
+5201,1010,2024-01-14,204.19,pending,Home
+5202,1013,2024-01-13,137.15,completed,Electronics
+5203,1025,2024-01-16,386.63,completed,Sporting Goods
+5204,1028,2024-01-18,216.53,completed,Home
+5205,1010,2024-01-15,17.4,completed,Sporting Goods
+5206,1016,2024-01-19,270.53,completed,Grocery
+5207,1042,2024-01-16,385.81,pending,Grocery
+5208,1044,2024-01-14,203.15,completed,Sporting Goods
+5209,1017,2024-01-18,120.44,completed,Sporting Goods
+5210,1026,2024-01-18,123.78,completed,Apparel
+5211,1028,2024-01-16,388.46,completed,Grocery
+5212,1034,2024-01-18,404.11,completed,Apparel
+5213,1021,2024-01-19,410.06,completed,Sporting Goods
+5214,1007,2024-01-13,84.97,completed,Apparel
+5215,1013,2024-01-17,213.7,completed,Grocery
+5216,1014,2024-01-18,293.08,completed,Electronics
+5217,1024,2024-01-17,106.39,completed,Sporting Goods
+5218,1044,2024-01-14,332.16,completed,Electronics
+5219,1040,2024-01-15,134.35,completed,Home
