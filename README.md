@@ -162,4 +162,4 @@ a natural fit for a **checksum**-based dedup step.
 | Reconciliation rules (Module 10) | not started | new model joining both customer sources |
 | Batch JSON transformation (Module 12) | staging done | `stg_customer_events.sql` — later modules may add validation/enrichment |
 
-Update this table as you go — it's the map of what's real vs. still ahead.
+Need to update map given progress — it's the map of what's real vs. still ahead.
