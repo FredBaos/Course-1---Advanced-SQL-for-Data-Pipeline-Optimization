@@ -7,27 +7,31 @@ module's concept gets applied here as a real piece of the pipeline, instead
 of staying a one-off exercise. Targets DuckDB locally — no server/cloud
 setup required.
 
-## Current state: raw layer only
+## Current state: raw layer + one parameterized mart
 
-Right now this repo has synthetic "messy" source data and light staging
-models (typing/trimming only — no dedup, no reconciliation, no history
-logic yet). That's intentional: the mess is the point, and future modules
+The repo has synthetic "messy" source data, light staging models
+(typing/trimming only — no dedup, no reconciliation, no history logic yet),
+and one mart model that applies the Module 1 concept (parameterized dbt
+pipelines). That's intentional: the mess is the point, and future modules
 clean it up.
 
 ```
 .
-├── dbt_project.yml / profiles.yml   # DuckDB, local, self-contained
+├── dbt_project.yml / profiles.yml   # DuckDB, local, self-contained; vars: block for Module 1
 ├── requirements.txt                 # pinned Python deps (dbt-duckdb)
 ├── seeds/
 │   ├── crm_customers.csv            # source A — see "Known issues" below
 │   ├── ecommerce_customers.csv      # source B — conflicts with A
 │   └── orders.csv                   # fact table, keyed to crm customer_id
 ├── data/raw_json/*.json             # daily event batches, nested metadata
-└── models/staging/
-    ├── stg_crm_customers.sql        # trim/cast only, duplicates preserved
-    ├── stg_ecommerce_customers.sql  # trim/cast only, not reconciled
-    ├── stg_orders.sql               # trim/cast only
-    └── stg_customer_events.sql      # flattens JSON via read_json_auto
+└── models/
+    ├── staging/
+    │   ├── stg_crm_customers.sql        # trim/cast only, duplicates preserved
+    │   ├── stg_ecommerce_customers.sql  # trim/cast only, not reconciled
+    │   ├── stg_orders.sql               # trim/cast only
+    │   └── stg_customer_events.sql      # flattens JSON via read_json_auto
+    └── marts/
+        └── daily_sales_summary.sql      # Module 1 — parameterized via dbt vars
 ```
 
 ## Setting up the project from scratch
@@ -85,6 +89,30 @@ source .venv/bin/activate
 dbt run --profiles-dir .
 ```
 
+## Module 1 — `daily_sales_summary` (parameterized model)
+
+`models/marts/daily_sales_summary.sql` is a daily sales report parameterized
+entirely through dbt vars — no hardcoded dates or filters. Defaults live in
+the `vars:` block in `dbt_project.yml`; override any of them per run with
+`--vars`, no code changes needed:
+
+```bash
+# default params (2024-01-13, status=completed, all categories)
+dbt run --profiles-dir .
+
+# 3-day window, drill into one category (turns on the high_value_sales column)
+dbt run --profiles-dir . --vars '{"analysis_date": "2024-01-13", "date_range_days": 3, "target_category": "Electronics"}'
+
+# different status, same date
+dbt run --profiles-dir . --vars '{"order_status": "pending"}'
+```
+
+Params: `analysis_date`, `date_range_days`, `order_status`, `target_category`
+(`'All'` or one of the five `product_category` values), and
+`high_value_threshold`. Full details — including why this uses
+`target_category` instead of the course exercise's `target_region` — are in
+the docstring at the top of the model file.
+
 ## Known issues in the raw data (deliberate — this is the point)
 
 **`crm_customers`**
@@ -112,7 +140,9 @@ a natural fit for a **checksum**-based dedup step.
 - Keyed only to CRM `customer_id`. Deliberately has no `region` column —
   regional analysis requires joining through the (unreconciled) customer
   dimension, which is the point: it forces the reconciliation work to
-  matter downstream, not just as an academic exercise.
+  matter downstream, not just as an academic exercise. This is also why
+  `daily_sales_summary` (Module 1) parameterizes on `product_category`
+  rather than region — a real regional join has to wait for reconciliation.
 
 **`data/raw_json/events_*.json`**
 - One file per day, array of event objects with a nested `metadata` object
@@ -125,7 +155,7 @@ a natural fit for a **checksum**-based dedup step.
 
 | Module concept | Status | Where it'll land |
 |---|---|---|
-| Parameterized models (Module 1) | done separately in `Course 1/Module 1/` | — |
+| Parameterized models (Module 1) | done | `models/marts/daily_sales_summary.sql` + `vars:` in `dbt_project.yml` |
 | Env/config-driven generation (Module 4) | not started | likely `dbt_project.yml` vars / `target` profiles |
 | Checksums (Module 7) | not started | new model, e.g. `models/cleansing/dedup_ecommerce_customers.sql` |
 | SCD2 (Module 8) | not started | new model over `stg_crm_customers` |

@@ -18,3 +18,15 @@ models:
   capstone_pipeline:
     staging:
       +materialized: view
+    marts:
+      +materialized: table
+
+# Module 1 — Build Your First Parameterized dbt Pipeline. Drives
+# models/marts/daily_sales_summary.sql; override any of these with
+# `dbt run --vars '{"target_category": "Electronics"}'` etc.
+vars:
+  analysis_date: '2024-01-13'
+  date_range_days: 1
+  order_status: completed
+  target_category: All
+  high_value_threshold: 300
