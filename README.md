@@ -29,10 +29,22 @@ clean it up.
     │   ├── stg_crm_customers.sql        # trim/cast only, duplicates preserved
     │   ├── stg_ecommerce_customers.sql  # trim/cast only, not reconciled
     │   ├── stg_orders.sql               # trim/cast only
-    │   └── stg_customer_events.sql      # flattens JSON via read_json_auto
-    └── marts/
-        └── daily_sales_summary.sql      # Module 1 — parameterized via dbt vars
+    │   └── stg_customer_events.sql      # flattens JSON; Module 12 TODOs inline
+    ├── marts/
+    │   ├── daily_sales_summary.sql      # Module 1 — parameterized via dbt vars, done
+    │   └── dim_customers_reconciled.sql # Module 10 — TODO skeleton, disabled
+    ├── cleansing/
+    │   └── dedup_ecommerce_customers.sql # Module 7 — TODO skeleton, disabled
+    └── history/
+        └── dim_crm_customers_scd2.sql   # Module 8 — TODO skeleton, disabled
 ```
+
+The three `# Module N — TODO skeleton, disabled` files above are placeholders:
+each has `{{ config(enabled=false) }}` at the top (so `dbt run` skips them
+for now) and a docstring laying out the business context and a checklist to
+implement when that module is covered. Flip `enabled` to `true` (or delete
+the config line) once the real logic replaces the `SELECT * FROM ...`
+placeholder body.
 
 ## Setting up the project from scratch
 
@@ -156,10 +168,48 @@ a natural fit for a **checksum**-based dedup step.
 | Module concept | Status | Where it'll land |
 |---|---|---|
 | Parameterized models (Module 1) | done | `models/marts/daily_sales_summary.sql` + `vars:` in `dbt_project.yml` |
-| Env/config-driven generation (Module 4) | not started | likely `dbt_project.yml` vars / `target` profiles |
-| Checksums (Module 7) | not started | new model, e.g. `models/cleansing/dedup_ecommerce_customers.sql` |
-| SCD2 (Module 8) | not started | new model over `stg_crm_customers` |
-| Reconciliation rules (Module 10) | not started | new model joining both customer sources |
-| Batch JSON transformation (Module 12) | staging done | `stg_customer_events.sql` — later modules may add validation/enrichment |
+| Env/config-driven generation (Module 4) | TODO — see checklist below | `dbt_project.yml` (TODO block near the `vars:` block) / `profiles.yml` |
+| Checksums (Module 7) | TODO — skeleton in place, disabled | `models/cleansing/dedup_ecommerce_customers.sql` |
+| SCD2 (Module 8) | TODO — skeleton in place, disabled | `models/history/dim_crm_customers_scd2.sql` |
+| Reconciliation rules (Module 10) | TODO — skeleton in place, disabled | `models/marts/dim_customers_reconciled.sql` |
+| Batch JSON transformation (Module 12) | staging done, enrichment TODO | `models/staging/stg_customer_events.sql` (TODO comment inline) |
 
 Need to update map given progress — it's the map of what's real vs. still ahead.
+
+## TODO checklist per module (not yet done)
+
+Each item below is expanded in more detail as inline TODOs in the file
+listed — this is just the quick-scan version.
+
+**Module 4 — env/config-driven generation** (`dbt_project.yml`)
+- [ ] Add a second `profiles.yml` target (e.g. `prod`) alongside `dev`.
+- [ ] Branch model/macro behavior on `{{ target.name }}`.
+- [ ] Decide whether any Module 1 vars should become environment-dependent.
+
+**Module 7 — checksums** (`models/cleansing/dedup_ecommerce_customers.sql`)
+- [ ] Pick the columns that define row identity for hashing.
+- [ ] Compute a checksum/hash column per row.
+- [ ] Dedup on the checksum; verify the row-count drop matches the known
+      exact-duplicate count.
+- [ ] Enable the model and point Module 10 at it instead of
+      `stg_ecommerce_customers`.
+
+**Module 8 — SCD2** (`models/history/dim_crm_customers_scd2.sql`)
+- [ ] Sequence each `customer_id`'s versions by `updated_at`.
+- [ ] Derive `valid_from` / `valid_to` and an `is_current` flag.
+- [ ] Decide hand-rolled SQL vs. dbt's built-in snapshot feature.
+- [ ] Enable the model and point Module 10 at its current-row slice.
+
+**Module 10 — reconciliation rules** (`models/marts/dim_customers_reconciled.sql`)
+- [ ] Normalize email as the join key between CRM and ecommerce.
+- [ ] Write precedence rules for conflicting fields (region vs. country,
+      name format, etc).
+- [ ] Emit one row per resolved customer at a consistent grain.
+- [ ] Once live, revisit `daily_sales_summary` (Module 1) and consider
+      adding a real `target_region` param via a join through this table.
+
+**Module 12 continued — batch JSON validation/enrichment** (`models/staging/stg_customer_events.sql`)
+- [ ] Decide how to surface the 9991-9993 orphan events (flag column vs.
+      quarantine model).
+- [ ] Validate `metadata.device` / `metadata.ip_country`.
+- [ ] Consider normalizing `event_type`.

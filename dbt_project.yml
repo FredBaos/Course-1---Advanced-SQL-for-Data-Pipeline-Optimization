@@ -30,3 +30,16 @@ vars:
   order_status: completed
   target_category: All
   high_value_threshold: 300
+
+# ---------------------------------------------------------------------------
+# TODO (Module 4 — env/config-driven generation): not started. The vars:
+# block above is a single static set of defaults regardless of environment.
+# Ideas to implement here once Module 4 is covered:
+#   [ ] Add a second target to profiles.yml (e.g. `prod`, pointing at a
+#       different .duckdb path/schema) alongside the current `dev` target.
+#   [ ] Use `{{ target.name }}` in models/macros to branch behavior — e.g.
+#       cap row counts in dev, or point at a smaller/larger seed sample.
+#   [ ] Consider whether any of the Module 1 vars above should become
+#       env-dependent (e.g. a wider default date_range_days in one target
+#       than another) instead of one fixed set for every run.
+# ---------------------------------------------------------------------------
