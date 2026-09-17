@@ -51,7 +51,7 @@
 */
 
 {% set start_date = modules.datetime.datetime.strptime(var('analysis_date'), '%Y-%m-%d').date() %}
-{% set end_date = start_date + modules.datetime.timedelta(days=var('date_range_days', 1) - 1) %}
+{% set end_date = start_date + modules.datetime.timedelta(days=(var('date_range_days', 1) | int) - 1) %}
 
 SELECT
     order_date,
@@ -69,3 +69,6 @@ WHERE order_date BETWEEN '{{ start_date }}' AND '{{ end_date }}'
   AND product_category = '{{ var('target_category') }}'
   {% endif %}
 GROUP BY order_date, product_category
+{% if target.name == 'dev' %}
+LIMIT 100 -- keep local dev runs fast/cheap
+{% endif %}

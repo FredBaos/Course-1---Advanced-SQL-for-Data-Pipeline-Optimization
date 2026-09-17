@@ -11,13 +11,13 @@ setup required.
 
 The repo has synthetic "messy" source data, light staging models
 (typing/trimming only — no dedup, no reconciliation, no history logic yet),
-and one mart model that applies the Module 1 concept (parameterized dbt
-pipelines). That's intentional: the mess is the point, and future modules
-clean it up.
+and one mart model that applies the Module 1 (parameterized pipelines) and
+Module 4 (env/config-driven generation) concepts together. That's
+intentional: the mess is the point, and future modules clean it up.
 
 ```
 .
-├── dbt_project.yml / profiles.yml   # DuckDB, local, self-contained; vars: block for Module 1
+├── dbt_project.yml / profiles.yml   # DuckDB, local, self-contained; vars: (Module 1) + dev/prod targets (Module 4)
 ├── requirements.txt                 # pinned Python deps (dbt-duckdb)
 ├── seeds/
 │   ├── crm_customers.csv            # source A — see "Known issues" below
@@ -89,8 +89,9 @@ only need to do this once per machine (or whenever `.venv` gets wiped).
    ```
 
 At this point `dev.duckdb` contains the raw seeds plus the staging views
-described below. `dev.duckdb`, `.venv/`, `target/`, and `logs/` are all
-gitignored — they're regenerated locally and never committed.
+described below. `*.duckdb` (both `dev.duckdb` and `prod.duckdb` — see
+Module 4 below), `.venv/`, `target/`, and `logs/` are all gitignored —
+they're regenerated locally and never committed.
 
 ## Day-to-day (after initial setup)
 
@@ -124,6 +125,40 @@ Params: `analysis_date`, `date_range_days`, `order_status`, `target_category`
 `high_value_threshold`. Full details — including why this uses
 `target_category` instead of the course exercise's `target_region` — are in
 the docstring at the top of the model file.
+
+## Module 4 — env/config-driven generation (dev vs. prod targets)
+
+`profiles.yml` now defines two targets under the `capstone_pipeline`
+profile: `dev` (default, `dev.duckdb`, 4 threads) and `prod` (`prod.duckdb`,
+16 threads). Pick one with `--target`:
+
+```bash
+dbt run --profiles-dir .                  # dev (default) -- dev.duckdb
+dbt run --profiles-dir . --target prod    # prod -- prod.duckdb
+```
+
+Two things in this pipeline now branch on which target is active,
+via the `target.name` Jinja variable:
+
+- **`dbt_project.yml` vars** — `date_range_days` and `order_status` are set
+  per-target instead of one fixed default: `date_range_days` is 1 in dev /
+  7 in prod, `order_status` is `pending` in dev / `completed` in prod.
+  `--vars` on the CLI still overrides either of these for a single run,
+  same as Module 1.
+- **`daily_sales_summary.sql`** adds a dev-only `LIMIT 100` at the bottom
+  (`{% if target.name == 'dev' %} LIMIT 100 {% endif %}`), so local runs
+  against a wide date range stay cheap; `prod` runs are unbounded.
+
+**Gotcha worth knowing:** a target-conditioned var has to be written as a
+*quoted* Jinja string, e.g. `date_range_days: "{{ 7 if target.name ==
+'prod' else 1 }}"` — unquoted, `{{ }}` collides with YAML's own
+flow-mapping syntax and fails to parse. But quoting also means the
+rendered value comes back as the **string** `"7"`, not the int `7` (dbt
+does not auto-convert it back). Since `daily_sales_summary.sql` does
+arithmetic on `date_range_days` (`var('date_range_days', 1) - 1`), it
+coerces with the Jinja `| int` filter: `(var('date_range_days', 1) | int)
+- 1`. Apply the same `| int` (or `| string`, `| bool`, etc.) to any var you
+make target-conditioned and then use in non-string Jinja logic.
 
 ## Known issues in the raw data (deliberate — this is the point)
 
@@ -168,7 +203,7 @@ a natural fit for a **checksum**-based dedup step.
 | Module concept | Status | Where it'll land |
 |---|---|---|
 | Parameterized models (Module 1) | done | `models/marts/daily_sales_summary.sql` + `vars:` in `dbt_project.yml` |
-| Env/config-driven generation (Module 4) | TODO — see checklist below | `dbt_project.yml` (TODO block near the `vars:` block) / `profiles.yml` |
+| Env/config-driven generation (Module 4) | done | `profiles.yml` (dev/prod targets) + `dbt_project.yml` (target-conditioned vars) |
 | Checksums (Module 7) | TODO — skeleton in place, disabled | `models/cleansing/dedup_ecommerce_customers.sql` |
 | SCD2 (Module 8) | TODO — skeleton in place, disabled | `models/history/dim_crm_customers_scd2.sql` |
 | Reconciliation rules (Module 10) | TODO — skeleton in place, disabled | `models/marts/dim_customers_reconciled.sql` |
@@ -180,11 +215,6 @@ Need to update map given progress — it's the map of what's real vs. still ahea
 
 Each item below is expanded in more detail as inline TODOs in the file
 listed — this is just the quick-scan version.
-
-**Module 4 — env/config-driven generation** (`dbt_project.yml`)
-- [ ] Add a second `profiles.yml` target (e.g. `prod`) alongside `dev`.
-- [ ] Branch model/macro behavior on `{{ target.name }}`.
-- [ ] Decide whether any Module 1 vars should become environment-dependent.
 
 **Module 7 — checksums** (`models/cleansing/dedup_ecommerce_customers.sql`)
 - [ ] Pick the columns that define row identity for hashing.

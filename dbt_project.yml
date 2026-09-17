@@ -24,22 +24,17 @@ models:
 # Module 1 — Build Your First Parameterized dbt Pipeline. Drives
 # models/marts/daily_sales_summary.sql; override any of these with
 # `dbt run --vars '{"target_category": "Electronics"}'` etc.
+#
+# Module 4 — env/config-driven generation. date_range_days and order_status
+# below are target-conditioned (dev vs. prod, see profiles.yml) instead of
+# one fixed default. Note the quoting: a target-conditioned var has to be a
+# *quoted* Jinja string ("{{ ... }}") or YAML chokes on the bare `{{`, but
+# that means it renders back as a string -- daily_sales_summary.sql coerces
+# date_range_days with `| int` before doing arithmetic on it. See README
+# "Module 4" section for the full explanation.
 vars:
   analysis_date: '2024-01-13'
-  date_range_days: 1
-  order_status: completed
+  date_range_days: "{{ 7 if target.name == 'prod' else 1 }}"
+  order_status: "{{ 'completed' if target.name == 'prod' else 'pending' }}"
   target_category: All
   high_value_threshold: 300
-
-# ---------------------------------------------------------------------------
-# TODO (Module 4 — env/config-driven generation): not started. The vars:
-# block above is a single static set of defaults regardless of environment.
-# Ideas to implement here once Module 4 is covered:
-#   [ ] Add a second target to profiles.yml (e.g. `prod`, pointing at a
-#       different .duckdb path/schema) alongside the current `dev` target.
-#   [ ] Use `{{ target.name }}` in models/macros to branch behavior — e.g.
-#       cap row counts in dev, or point at a smaller/larger seed sample.
-#   [ ] Consider whether any of the Module 1 vars above should become
-#       env-dependent (e.g. a wider default date_range_days in one target
-#       than another) instead of one fixed set for every run.
-# ---------------------------------------------------------------------------
