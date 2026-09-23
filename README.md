@@ -7,13 +7,15 @@ module's concept gets applied here as a real piece of the pipeline, instead
 of staying a one-off exercise. Targets DuckDB locally — no server/cloud
 setup required.
 
-## Current state: raw layer + one parameterized mart
+## Current state: raw layer + parameterized mart + checksum dedup
 
 The repo has synthetic "messy" source data, light staging models
-(typing/trimming only — no dedup, no reconciliation, no history logic yet),
-and one mart model that applies the Module 1 (parameterized pipelines) and
-Module 4 (env/config-driven generation) concepts together. That's
-intentional: the mess is the point, and future modules clean it up.
+(typing/trimming only — no dedup, no reconciliation, no history logic at
+the staging layer), a mart model that applies the Module 1 (parameterized
+pipelines) and Module 4 (env/config-driven generation) concepts together,
+and a cleansing model that applies Module 7 (checksums) to collapse
+`ecommerce_customers`' exact-duplicate rows. That's intentional: the mess
+is the point, and each module cleans up (or enriches) one more piece of it.
 
 ```
 .
@@ -34,17 +36,18 @@ intentional: the mess is the point, and future modules clean it up.
     │   ├── daily_sales_summary.sql      # Module 1 — parameterized via dbt vars, done
     │   └── dim_customers_reconciled.sql # Module 10 — TODO skeleton, disabled
     ├── cleansing/
-    │   └── dedup_ecommerce_customers.sql # Module 7 — TODO skeleton, disabled
+    │   └── dedup_ecommerce_customers.sql # Module 7 — checksum-based dedup, done
     └── history/
         └── dim_crm_customers_scd2.sql   # Module 8 — TODO skeleton, disabled
 ```
 
-The three `# Module N — TODO skeleton, disabled` files above are placeholders:
-each has `{{ config(enabled=false) }}` at the top (so `dbt run` skips them
-for now) and a docstring laying out the business context and a checklist to
-implement when that module is covered. Flip `enabled` to `true` (or delete
-the config line) once the real logic replaces the `SELECT * FROM ...`
-placeholder body.
+The two remaining `# Module N — TODO skeleton, disabled` files above are
+placeholders: each has `{{ config(enabled=false) }}` at the top (so `dbt run`
+skips them for now) and a docstring laying out the business context and a
+checklist to implement when that module is covered. Flip `enabled` to `true`
+(or delete the config line) once the real logic replaces the
+`SELECT * FROM ...` placeholder body — see Module 7 below for a worked
+example of doing exactly that.
 
 ## Setting up the project from scratch
 
@@ -101,6 +104,36 @@ Once `.venv` exists, each new terminal session just needs:
 source .venv/bin/activate
 dbt run --profiles-dir .
 ```
+
+## Exploring data locally (before writing a model)
+
+For quick, throwaway exploration -- e.g. deciding which columns define a
+row's identity before writing a checksum, or eyeballing a staging model --
+drop into a Python shell against `dev.duckdb` directly instead of writing a
+one-off `.sql` file:
+
+```bash
+source .venv/bin/activate
+python3
+```
+```python
+import duckdb
+con = duckdb.connect("dev.duckdb")
+
+con.sql("SELECT * FROM ecommerce_customers").show()
+
+# find rows that repeat on a candidate set of identity columns
+con.sql("""
+    SELECT full_name, email_address, phone_number, country, created_at, COUNT(*) AS n
+    FROM ecommerce_customers
+    GROUP BY ALL
+    HAVING COUNT(*) > 1
+""").show()
+```
+
+This talks to the same `dev.duckdb` file `dbt run`/`dbt seed` build into, so
+it sees seeds and any already-built staging models immediately. No dbt
+compile step, no throwaway model file to remember to delete.
 
 ## Module 1 — `daily_sales_summary` (parameterized model)
 
@@ -160,6 +193,94 @@ coerces with the Jinja `| int` filter: `(var('date_range_days', 1) | int)
 - 1`. Apply the same `| int` (or `| string`, `| bool`, etc.) to any var you
 make target-conditioned and then use in non-string Jinja logic.
 
+## Module 7 — checksums (`dedup_ecommerce_customers`)
+
+`ecommerce_customers` has a couple of exact-duplicate rows from a simulated
+accidental double ingestion (see "Known issues" below). There's no clean
+natural key to dedup on — `ecommerce_customer_id` is unique per *row*, even
+for the duplicated ones — so `models/cleansing/dedup_ecommerce_customers.sql`
+hashes each row's business columns into a checksum and keeps one row per
+distinct checksum:
+
+```sql
+WITH hashed AS (
+    SELECT
+        *,
+        MD5(
+            CONCAT_WS('|', full_name, email, phone, country, CAST(created_at AS VARCHAR))
+        ) AS row_checksum
+    FROM {{ ref('stg_ecommerce_customers') }}
+)
+SELECT * EXCLUDE (row_checksum)
+FROM hashed
+QUALIFY ROW_NUMBER() OVER (PARTITION BY row_checksum ORDER BY ecommerce_customer_id) = 1
+```
+
+- **Identity columns**: every business column from `stg_ecommerce_customers`
+  except the surrogate id — `full_name`, `email`, `phone`, `country`,
+  `created_at`. Chosen by grouping on that set and confirming the only
+  groups with `COUNT(*) > 1` were the known accidental-duplicate rows (see
+  "Exploring data locally" above for the query used to check this) — too few
+  columns would falsely merge distinct customers, including the id would
+  never catch a duplicate at all.
+- **Checksum**: `MD5(CONCAT_WS('|', ...))` over those columns.
+- **Dedup**: `QUALIFY ROW_NUMBER() OVER (PARTITION BY row_checksum ...) = 1`
+  keeps exactly one row per checksum.
+- **Verified**: `stg_ecommerce_customers` has 40 rows, `dedup_ecommerce_customers`
+  has 38 — a drop of 2, matching the known duplicate count — and re-running
+  the duplicate-check query against the deduped output returns zero groups.
+
+Model is enabled (`dbt run` builds it). Not yet done: `dim_customers_reconciled.sql`
+(Module 10) still reads from `stg_ecommerce_customers` directly rather than
+this model — switching that over is part of Module 10, not this one.
+
+### Testing a model change like this
+
+The general recipe, used here and worth repeating for any model edit in
+this repo:
+
+```bash
+source .venv/bin/activate
+
+# 1. compile first -- catches Jinja/SQL syntax errors without materializing
+dbt compile --profiles-dir . --select dedup_ecommerce_customers
+
+# 2. build just this model
+dbt run --profiles-dir . --select dedup_ecommerce_customers
+
+# 3. eyeball the output
+dbt show --profiles-dir . --select dedup_ecommerce_customers --limit 50
+```
+
+Then verify row counts and check for leftover duplicates -- via `dbt show
+--inline` or the python3/duckdb shell from "Exploring data locally" above:
+
+```python
+import duckdb
+con = duckdb.connect("dev.duckdb")
+
+before = con.sql("SELECT COUNT(*) FROM stg_ecommerce_customers").fetchone()[0]
+after = con.sql("SELECT COUNT(*) FROM dedup_ecommerce_customers").fetchone()[0]
+print("dropped:", before - after)   # should equal the known duplicate count
+
+con.sql("""
+    SELECT full_name, email, phone, country, created_at, COUNT(*) AS n
+    FROM dedup_ecommerce_customers
+    GROUP BY ALL
+    HAVING COUNT(*) > 1
+""").show()   # should return zero rows
+```
+
+Two checks, not one: the row-count drop catches *under*-deduping (checksum
+missed a real duplicate), the leftover-duplicate-groups check catches
+*over*-deduping (checksum too broad, merged distinct customers). A single
+before/after count alone can't tell those apart.
+
+`dbt test --profiles-dir . --select dedup_ecommerce_customers` won't do
+anything yet — it only runs data tests declared in a `schema.yml`, and none
+exist for this model. Formalizing the above as an actual `unique` test
+(instead of a manual check) is still open — see the TODO checklist below.
+
 ## Known issues in the raw data (deliberate — this is the point)
 
 **`crm_customers`**
@@ -204,7 +325,7 @@ a natural fit for a **checksum**-based dedup step.
 |---|---|---|
 | Parameterized models (Module 1) | done | `models/marts/daily_sales_summary.sql` + `vars:` in `dbt_project.yml` |
 | Env/config-driven generation (Module 4) | done | `profiles.yml` (dev/prod targets) + `dbt_project.yml` (target-conditioned vars) |
-| Checksums (Module 7) | TODO — skeleton in place, disabled | `models/cleansing/dedup_ecommerce_customers.sql` |
+| Checksums (Module 7) | done | `models/cleansing/dedup_ecommerce_customers.sql` |
 | SCD2 (Module 8) | TODO — skeleton in place, disabled | `models/history/dim_crm_customers_scd2.sql` |
 | Reconciliation rules (Module 10) | TODO — skeleton in place, disabled | `models/marts/dim_customers_reconciled.sql` |
 | Batch JSON transformation (Module 12) | staging done, enrichment TODO | `models/staging/stg_customer_events.sql` (TODO comment inline) |
@@ -216,13 +337,16 @@ Need to update map given progress — it's the map of what's real vs. still ahea
 Each item below is expanded in more detail as inline TODOs in the file
 listed — this is just the quick-scan version.
 
-**Module 7 — checksums** (`models/cleansing/dedup_ecommerce_customers.sql`)
-- [ ] Pick the columns that define row identity for hashing.
-- [ ] Compute a checksum/hash column per row.
-- [ ] Dedup on the checksum; verify the row-count drop matches the known
+**Module 7 — checksums** (`models/cleansing/dedup_ecommerce_customers.sql`) — done, see Module 7 section above
+- [x] Pick the columns that define row identity for hashing.
+- [x] Compute a checksum/hash column per row.
+- [x] Dedup on the checksum; verify the row-count drop matches the known
       exact-duplicate count.
-- [ ] Enable the model and point Module 10 at it instead of
-      `stg_ecommerce_customers`.
+- [x] Enable the model.
+- [ ] Add a formal `schema.yml` `unique` test on the checksum (currently
+      verified manually, see "Testing a model change like this" above).
+- [ ] Point Module 10 at it instead of `stg_ecommerce_customers`, once
+      Module 10 exists.
 
 **Module 8 — SCD2** (`models/history/dim_crm_customers_scd2.sql`)
 - [ ] Sequence each `customer_id`'s versions by `updated_at`.
