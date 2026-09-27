@@ -28,13 +28,15 @@
   duplicate-check query against this model's output returns zero groups.
   See README "Testing a model change like this" for the check itself.
 
-  STILL OPEN
+  TESTING
   -----------------
-  [ ] Add a formal schema.yml `unique` test on row_checksum (currently
-      verified manually).
-  [ ] Point models/marts/dim_customers_reconciled.sql (Module 10) at this
-      model instead of stg_ecommerce_customers directly, once Module 10
-      exists.
+  row_checksum is kept in the output (not excluded) specifically so
+  schema.yml can assert `unique` on it -- see models/cleansing/schema.yml.
+  A duplicate checksum surviving this model would mean the dedup itself is
+  broken, so this is the one test worth formalizing.
+
+  Point models/marts/dim_customers_reconciled.sql (Module 10) at this model
+  instead of stg_ecommerce_customers directly -- done, see README Module 10.
 */
 
 WITH hashed AS (
@@ -51,7 +53,7 @@ WITH hashed AS (
         ) AS row_checksum
     FROM {{ ref('stg_ecommerce_customers') }}
 )
-SELECT * EXCLUDE (row_checksum)
+SELECT *
 FROM hashed
 QUALIFY ROW_NUMBER() OVER (PARTITION BY row_checksum ORDER BY ecommerce_customer_id) = 1
 

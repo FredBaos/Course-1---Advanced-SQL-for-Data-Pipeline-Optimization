@@ -32,9 +32,15 @@ models:
 # that means it renders back as a string -- daily_sales_summary.sql coerces
 # date_range_days with `| int` before doing arithmetic on it. See README
 # "Module 4" section for the full explanation.
+#
+# target_region — added once Module 10 (reconciliation) made a real
+# regional join possible; joins through dim_customers_reconciled's
+# resolved_region. 'All' (default) means no regional join/filter at all,
+# same pattern as target_category. See README "Module 1" section.
 vars:
   analysis_date: '2024-01-13'
   date_range_days: "{{ 7 if target.name == 'prod' else 1 }}"
   order_status: "{{ 'completed' if target.name == 'prod' else 'pending' }}"
   target_category: All
+  target_region: All
   high_value_threshold: 300

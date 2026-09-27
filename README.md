@@ -7,25 +7,31 @@ module's concept gets applied here as a real piece of the pipeline, instead
 of staying a one-off exercise. Targets DuckDB locally — no server/cloud
 setup required.
 
-## Current state: raw layer + parameterized mart + checksum dedup
+## Current state: raw layer + parameterized mart + checksum dedup + SCD2 history + reconciled customer identity
 
 The repo has synthetic "messy" source data, light staging models
-(typing/trimming only — no dedup, no reconciliation, no history logic at
-the staging layer), a mart model that applies the Module 1 (parameterized
+(typing/trimming only — reconciliation/history logic lives downstream, not
+at the staging layer), a mart model that applies the Module 1 (parameterized
 pipelines) and Module 4 (env/config-driven generation) concepts together,
-and a cleansing model that applies Module 7 (checksums) to collapse
-`ecommerce_customers`' exact-duplicate rows. That's intentional: the mess
-is the point, and each module cleans up (or enriches) one more piece of it.
+a cleansing model that applies Module 7 (checksums) to collapse
+`ecommerce_customers`' exact-duplicate rows, a history model that applies
+Module 8 (SCD2) to turn `crm_customers`' overwrite-in-place changes into a
+proper versioned dimension, and a reconciliation mart that applies Module 10
+to resolve both customer sources into one identity per real person. That's
+intentional: the mess is the point, and each module cleans up (or enriches)
+one more piece of it.
 
 ```
 .
-├── dbt_project.yml / profiles.yml   # DuckDB, local, self-contained; vars: (Module 1) + dev/prod targets (Module 4)
+├── dbt_project.yml / profiles.yml   # DuckDB, local, self-contained; vars: (Module 1, incl. target_region) + dev/prod targets (Module 4)
 ├── requirements.txt                 # pinned Python deps (dbt-duckdb)
 ├── seeds/
 │   ├── crm_customers.csv            # source A — see "Known issues" below
 │   ├── ecommerce_customers.csv      # source B — conflicts with A
 │   └── orders.csv                   # fact table, keyed to crm customer_id
 ├── data/raw_json/*.json             # daily event batches, nested metadata
+├── tests/
+│   └── assert_one_current_row_per_crm_customer.sql # Module 8 invariant test
 └── models/
     ├── staging/
     │   ├── stg_crm_customers.sql        # trim/cast only, duplicates preserved
@@ -33,21 +39,21 @@ is the point, and each module cleans up (or enriches) one more piece of it.
     │   ├── stg_orders.sql               # trim/cast only
     │   └── stg_customer_events.sql      # flattens JSON; Module 12 TODOs inline
     ├── marts/
-    │   ├── daily_sales_summary.sql      # Module 1 — parameterized via dbt vars, done
-    │   └── dim_customers_reconciled.sql # Module 10 — TODO skeleton, disabled
+    │   ├── daily_sales_summary.sql      # Module 1 — parameterized via dbt vars, done (incl. target_region via Module 10)
+    │   └── dim_customers_reconciled.sql # Module 10 — reconciliation rules, done
     ├── cleansing/
-    │   └── dedup_ecommerce_customers.sql # Module 7 — checksum-based dedup, done
+    │   ├── dedup_ecommerce_customers.sql # Module 7 — checksum-based dedup, done
+    │   └── schema.yml                    # unique/not_null test on row_checksum
     └── history/
-        └── dim_crm_customers_scd2.sql   # Module 8 — TODO skeleton, disabled
+        └── dim_crm_customers_scd2.sql   # Module 8 — SCD2 history, done
 ```
 
-The two remaining `# Module N — TODO skeleton, disabled` files above are
-placeholders: each has `{{ config(enabled=false) }}` at the top (so `dbt run`
-skips them for now) and a docstring laying out the business context and a
-checklist to implement when that module is covered. Flip `enabled` to `true`
-(or delete the config line) once the real logic replaces the
-`SELECT * FROM ...` placeholder body — see Module 7 below for a worked
-example of doing exactly that.
+All three of the `# Module N — TODO skeleton` placeholder files (Module 7,
+8, 10) are now implemented, enabled, and tested. Only Module 12's
+inline-TODO enrichment (`stg_customer_events.sql` — already enabled, just
+missing orphan-event handling and validation) remains. See Module 7, 8, or
+10 below for a worked example of the skeleton → real-logic pattern, if
+that's useful reference for Module 12.
 
 ## Setting up the project from scratch
 
@@ -143,7 +149,7 @@ the `vars:` block in `dbt_project.yml`; override any of them per run with
 `--vars`, no code changes needed:
 
 ```bash
-# default params (2024-01-13, status=completed, all categories)
+# default params (2024-01-13, status=completed, all categories, all regions)
 dbt run --profiles-dir .
 
 # 3-day window, drill into one category (turns on the high_value_sales column)
@@ -151,13 +157,20 @@ dbt run --profiles-dir . --vars '{"analysis_date": "2024-01-13", "date_range_day
 
 # different status, same date
 dbt run --profiles-dir . --vars '{"order_status": "pending"}'
+
+# drill into one region (turns on the resolved_region column) -- joins
+# through Module 10's dim_customers_reconciled
+dbt run --profiles-dir . --vars '{"analysis_date": "2024-01-13", "date_range_days": 3, "target_region": "West"}'
 ```
 
 Params: `analysis_date`, `date_range_days`, `order_status`, `target_category`
-(`'All'` or one of the five `product_category` values), and
-`high_value_threshold`. Full details — including why this uses
-`target_category` instead of the course exercise's `target_region` — are in
-the docstring at the top of the model file.
+(`'All'` or one of the five `product_category` values), `target_region`
+(`'All'` or one of `dim_customers_reconciled.resolved_region`'s values —
+see Module 10), and `high_value_threshold`. Full details — including the
+history of why this originally used `target_category` instead of the
+course exercise's `target_region`, and how `target_region` got added once
+Module 10 made a real regional join possible — are in the docstring at the
+top of the model file.
 
 ## Module 4 — env/config-driven generation (dev vs. prod targets)
 
@@ -211,7 +224,7 @@ WITH hashed AS (
         ) AS row_checksum
     FROM {{ ref('stg_ecommerce_customers') }}
 )
-SELECT * EXCLUDE (row_checksum)
+SELECT *
 FROM hashed
 QUALIFY ROW_NUMBER() OVER (PARTITION BY row_checksum ORDER BY ecommerce_customer_id) = 1
 ```
@@ -223,16 +236,18 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY row_checksum ORDER BY ecommerce_customer
   "Exploring data locally" above for the query used to check this) — too few
   columns would falsely merge distinct customers, including the id would
   never catch a duplicate at all.
-- **Checksum**: `MD5(CONCAT_WS('|', ...))` over those columns.
+- **Checksum**: `MD5(CONCAT_WS('|', ...))` over those columns. Kept in the
+  output (not excluded) specifically so it can be tested — see "Testing a
+  model change like this" below.
 - **Dedup**: `QUALIFY ROW_NUMBER() OVER (PARTITION BY row_checksum ...) = 1`
   keeps exactly one row per checksum.
 - **Verified**: `stg_ecommerce_customers` has 40 rows, `dedup_ecommerce_customers`
   has 38 — a drop of 2, matching the known duplicate count — and re-running
   the duplicate-check query against the deduped output returns zero groups.
 
-Model is enabled (`dbt run` builds it). Not yet done: `dim_customers_reconciled.sql`
-(Module 10) still reads from `stg_ecommerce_customers` directly rather than
-this model — switching that over is part of Module 10, not this one.
+Model is enabled (`dbt run` builds it), and `dim_customers_reconciled.sql`
+(Module 10) reads from this model rather than `stg_ecommerce_customers`
+directly.
 
 ### Testing a model change like this
 
@@ -276,10 +291,233 @@ missed a real duplicate), the leftover-duplicate-groups check catches
 *over*-deduping (checksum too broad, merged distinct customers). A single
 before/after count alone can't tell those apart.
 
-`dbt test --profiles-dir . --select dedup_ecommerce_customers` won't do
-anything yet — it only runs data tests declared in a `schema.yml`, and none
-exist for this model. Formalizing the above as an actual `unique` test
-(instead of a manual check) is still open — see the TODO checklist below.
+`dbt test --profiles-dir . --select dedup_ecommerce_customers` now runs a
+real test: `models/cleansing/schema.yml` declares `unique` and `not_null`
+on `row_checksum` — a duplicate checksum surviving this model would mean
+the dedup itself is broken. That's why `row_checksum` is kept in the output
+above rather than excluded.
+
+## Module 8 — SCD2 (`dim_crm_customers_scd2`)
+
+~15% of `crm_customers` `customer_id` values appear twice, with a later
+`updated_at` and a changed `region`/`phone` — simulating a source system
+that overwrites in place instead of versioning (see "Known issues" below).
+`models/history/dim_crm_customers_scd2.sql` turns that overwrite-in-place
+pattern into a proper SCD2 dimension: one row per `(customer_id, version)`,
+with `valid_from`/`valid_to` bounds and an `is_current` flag, so downstream
+models can ask "what did we believe about this customer on date X" instead
+of only ever seeing the latest overwrite.
+
+```sql
+SELECT
+    *,
+    ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at) AS version_number,
+    updated_at AS valid_from,
+    LEAD(updated_at) OVER (PARTITION BY customer_id ORDER BY updated_at) AS valid_to,
+    valid_to IS NULL AS is_current
+FROM {{ ref('stg_crm_customers') }}
+```
+
+- **Version sequence**: `ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY
+  updated_at)` — each customer's rows numbered oldest to newest.
+- **`valid_from` / `valid_to`**: `valid_from` is the row's own `updated_at`;
+  `valid_to` is the *next* version's `updated_at` via `LEAD(...)` — `NULL`
+  when there is no next version (i.e. this is the current row).
+- **`is_current`**: falls out of `valid_to IS NULL`. Kept as an explicit
+  boolean column (rather than relying on callers to remember the NULL
+  convention) for self-documenting downstream joins.
+- **Hand-rolled SQL, not a dbt snapshot**: dbt snapshots detect changes
+  *across successive dbt runs* of a source that mutates over time. That's
+  not this data — both versions of e.g. customer 1007 already sit as two
+  static rows in the one seed file, in a single load. Window functions over
+  `stg_crm_customers` directly match how this history already exists in the
+  seed, rather than trying to make snapshots rediscover it run-over-run.
+- **Verified**: 51 rows in `stg_crm_customers` → 51 rows out (SCD2 annotates
+  history, it doesn't drop or add rows), 45 distinct `customer_id` values,
+  exactly 45 `is_current = true` rows (one per customer, no more, no less),
+  no row where `valid_from > valid_to`. Spot-checked customer 1007:
+  `region` goes West (`valid_from 2023-12-12, valid_to 2024-04-13,
+  is_current false`) → East (`valid_from 2024-04-13, valid_to NULL,
+  is_current true`).
+
+Model is enabled (`dbt run` builds it), and `dim_customers_reconciled.sql`
+(Module 10) reads from this model's current-row (`is_current`) slice rather
+than `stg_crm_customers` directly.
+
+### Testing this one
+
+Same recipe as Module 7 (compile → run → check invariants), but the
+invariants for an SCD2 model are different from a dedup model — row count
+should stay the *same*, and the thing to actually verify is version
+integrity:
+
+```python
+import duckdb
+con = duckdb.connect("dev.duckdb")
+
+print(con.sql("SELECT COUNT(*) FROM dim_crm_customers_scd2").fetchone()[0])   # 51, same as stg_crm_customers
+print(con.sql("SELECT COUNT(DISTINCT customer_id) FROM dim_crm_customers_scd2").fetchone()[0])  # 45
+
+# exactly one is_current = true per customer_id -- breaks every downstream
+# join to this model's "current" slice if violated
+con.sql("""
+    SELECT customer_id, COUNT(*) FILTER (WHERE is_current) AS n_current
+    FROM dim_crm_customers_scd2
+    GROUP BY customer_id
+    HAVING COUNT(*) FILTER (WHERE is_current) <> 1
+""").show()   # should return zero rows
+
+# valid_from should never be after valid_to
+con.sql("""
+    SELECT * FROM dim_crm_customers_scd2
+    WHERE valid_to IS NOT NULL AND valid_from > valid_to
+""").show()   # should return zero rows
+```
+
+The "exactly one current row per customer" check above is now a real test:
+`tests/assert_one_current_row_per_crm_customer.sql`. It's a *singular*
+test rather than a `schema.yml` generic one, because the invariant spans
+multiple rows (a `GROUP BY customer_id HAVING ...`) rather than being a
+property of one column — dbt's built-in generic tests
+(`unique`/`not_null`/etc.) only check single columns, so a cross-row rule
+like this is written as a plain `.sql` file under `tests/` that dbt fails
+if it returns any rows.
+
+## Module 10 — reconciliation rules (`dim_customers_reconciled`)
+
+`crm_customers` and `ecommerce_customers` are two identity systems with no
+shared key — only a fuzzy join on (already-normalized) email. 26 ecommerce
+customers overlap with CRM by email; the rest are net-new, ecommerce-only
+customers with no CRM record. `models/marts/dim_customers_reconciled.sql`
+resolves both sources into one customer identity per real person.
+
+```sql
+WITH crm_current AS (
+    SELECT * FROM {{ ref('dim_crm_customers_scd2') }} WHERE is_current
+),
+ec AS (
+    SELECT * FROM {{ ref('dedup_ecommerce_customers') }}
+),
+resolved AS (
+    SELECT
+        crm_current.customer_id,
+        ec.ecommerce_customer_id,
+        COALESCE(crm_current.email, ec.email) AS email,
+        COALESCE(
+            TRIM(crm_current.first_name || ' ' || crm_current.last_name),
+            ec.full_name
+        ) AS name,
+        COALESCE(crm_current.phone, ec.phone) AS phone,
+        crm_current.region,
+        ec.country,
+        COALESCE(crm_current.region, ec.country) AS resolved_region
+    FROM crm_current
+    FULL OUTER JOIN ec ON ec.email = crm_current.email
+)
+
+SELECT
+    customer_id,
+    ecommerce_customer_id,
+    email,
+    array_to_string(
+        list_transform(
+            string_split(LOWER(name), ' '),
+            part -> upper(substr(part, 1, 1)) || substr(part, 2)
+        ),
+        ' '
+    ) AS name,
+    phone,
+    region,
+    country,
+    resolved_region
+FROM resolved
+```
+
+- **Inputs**: Module 7's dedup output and Module 8's current-row SCD2
+  slice — not the raw staging models — so reconciliation runs on
+  already-cleaned inputs rather than redoing that work. This is exactly why
+  Module 8 needed to land before this one: joining raw `stg_crm_customers`
+  would have produced duplicate matches for the 6 customers with two
+  versions.
+- **Join**: `FULL OUTER JOIN` on email keeps all three groups at one
+  grain — matched (26), CRM-only (19), ecommerce-only (12) = 57 rows total.
+  An `INNER`/`LEFT JOIN` would have silently dropped one or two of those
+  groups.
+- **Precedence rules**: CRM wins when both sources have the customer
+  (older, more authoritative system of record); ecommerce fields fill in
+  only where there's no matching CRM record.
+  - `name`: CRM `first_name`+`last_name`, else ecommerce `full_name`.
+  - `phone`: CRM phone, else ecommerce phone.
+  - `region`/`country` are different taxonomies (West/East/South vs.
+    USA/Canada), not just formatting drift — kept as separate raw columns
+    for transparency, plus a merged `resolved_region` for the future
+    `target_region` join.
+- **Name casing normalization**: CRM has ALL-CAPS rows for a subset of
+  customers (e.g. `PRIYA IVANOV`, `NOAH KIM`) even after staging's TRIM-only
+  pass — precedence alone just picks the right source, casing and all, so
+  the resolved `name` gets title-cased in a final pass: lowercase, then
+  uppercase each space-separated word's first letter. No `initcap()` in
+  this DuckDB version, so it's hand-rolled via
+  `string_split`/`list_transform`/`array_to_string`. Confirmed neither
+  source has hyphenated or apostrophe names (a plain space-split
+  title-case would mangle e.g. `smith-jones` → `Smith-jones`), so this is
+  safe for this dataset as it stands.
+- **Verified**: 57 rows, zero duplicate emails, 26/19/12 group split
+  matches expected, zero rows with `name IS NULL`, zero rows where `name`
+  is still all-uppercase. Customer 1033 (genuinely different phone numbers
+  on each side, not just formatting) resolves to the CRM phone
+  `(939) 605-8588`. Customer 1045 (CRM casing issue) now resolves to
+  `Priya Ivanov`; already-proper-case ecommerce-only names pass through
+  unaffected (title-casing an already-correct name is a no-op).
+
+Model is enabled, and `daily_sales_summary` (Module 1) now has a real
+`target_region` param that joins through `resolved_region` — see the
+updated Module 1 section above.
+
+### Testing this one
+
+```bash
+dbt compile --profiles-dir . --select dim_customers_reconciled
+dbt run --profiles-dir . --select dim_customers_reconciled
+```
+
+```python
+import duckdb
+con = duckdb.connect("dev.duckdb")
+
+print(con.sql("SELECT COUNT(*) FROM dim_customers_reconciled").fetchone()[0])   # 57
+
+con.sql("""
+    SELECT email, COUNT(*) FROM dim_customers_reconciled
+    GROUP BY email HAVING COUNT(*) > 1
+""").show()   # should return zero rows -- email was the join key
+
+con.sql("""
+    SELECT
+        COUNT(*) FILTER (WHERE customer_id IS NOT NULL AND ecommerce_customer_id IS NOT NULL) AS matched,
+        COUNT(*) FILTER (WHERE customer_id IS NOT NULL AND ecommerce_customer_id IS NULL) AS crm_only,
+        COUNT(*) FILTER (WHERE customer_id IS NULL AND ecommerce_customer_id IS NOT NULL) AS ec_only
+    FROM dim_customers_reconciled
+""").show()   # should be 26 / 19 / 12
+
+# spot-check a customer with a genuine conflict (not just missing data) to
+# confirm precedence actually resolved rather than accidentally picking
+# whichever side happened to be non-null
+con.sql("SELECT * FROM dim_customers_reconciled WHERE customer_id = 1033").show()
+
+# no name should still be all-uppercase after the title-case pass
+con.sql("""
+    SELECT customer_id, ecommerce_customer_id, name FROM dim_customers_reconciled
+    WHERE name = UPPER(name) AND LENGTH(name) > 1
+""").show()   # should return zero rows
+```
+
+The join/grain checks (row count, no duplicate emails, group split) verify
+the `FULL OUTER JOIN` is correct. The spot-check on a customer with
+genuinely conflicting values on both sides is what verifies the precedence
+*rule* was actually applied, rather than just confirming the join ran. The
+all-uppercase check verifies the title-case normalization actually caught
+every affected row, not just the one spot-checked.
 
 ## Known issues in the raw data (deliberate — this is the point)
 
@@ -300,17 +538,18 @@ exist for this model. Formalizing the above as an actual `unique` test
 - ~26 customers overlap with CRM by email; the rest are net-new,
   e-commerce-only customers with no CRM record at all.
 
-Together these two sources are what a **reconciliation-rules** model needs
-to resolve into a single customer identity, and the exact-duplicate rows are
-a natural fit for a **checksum**-based dedup step.
+Together these two sources are what the **reconciliation-rules** model
+(`dim_customers_reconciled`, Module 10) resolves into a single customer
+identity, and the exact-duplicate rows are what the **checksum**-based
+dedup step (Module 7) collapses.
 
 **`orders`**
 - Keyed only to CRM `customer_id`. Deliberately has no `region` column —
-  regional analysis requires joining through the (unreconciled) customer
-  dimension, which is the point: it forces the reconciliation work to
-  matter downstream, not just as an academic exercise. This is also why
-  `daily_sales_summary` (Module 1) parameterizes on `product_category`
-  rather than region — a real regional join has to wait for reconciliation.
+  regional analysis requires joining through the customer dimension, which
+  is the point: it forces the reconciliation work to matter downstream, not
+  just as an academic exercise. `dim_customers_reconciled` (Module 10) now
+  provides a `resolved_region`, but `daily_sales_summary` (Module 1) hasn't
+  been rewired to use it yet — still parameterizes on `product_category`.
 
 **`data/raw_json/events_*.json`**
 - One file per day, array of event objects with a nested `metadata` object
@@ -326,8 +565,8 @@ a natural fit for a **checksum**-based dedup step.
 | Parameterized models (Module 1) | done | `models/marts/daily_sales_summary.sql` + `vars:` in `dbt_project.yml` |
 | Env/config-driven generation (Module 4) | done | `profiles.yml` (dev/prod targets) + `dbt_project.yml` (target-conditioned vars) |
 | Checksums (Module 7) | done | `models/cleansing/dedup_ecommerce_customers.sql` |
-| SCD2 (Module 8) | TODO — skeleton in place, disabled | `models/history/dim_crm_customers_scd2.sql` |
-| Reconciliation rules (Module 10) | TODO — skeleton in place, disabled | `models/marts/dim_customers_reconciled.sql` |
+| SCD2 (Module 8) | done | `models/history/dim_crm_customers_scd2.sql` |
+| Reconciliation rules (Module 10) | done | `models/marts/dim_customers_reconciled.sql` |
 | Batch JSON transformation (Module 12) | staging done, enrichment TODO | `models/staging/stg_customer_events.sql` (TODO comment inline) |
 
 Need to update map given progress — it's the map of what's real vs. still ahead.
@@ -343,24 +582,38 @@ listed — this is just the quick-scan version.
 - [x] Dedup on the checksum; verify the row-count drop matches the known
       exact-duplicate count.
 - [x] Enable the model.
-- [ ] Add a formal `schema.yml` `unique` test on the checksum (currently
-      verified manually, see "Testing a model change like this" above).
-- [ ] Point Module 10 at it instead of `stg_ecommerce_customers`, once
-      Module 10 exists.
+- [x] Add a formal `schema.yml` `unique` test on the checksum — done, see
+      `models/cleansing/schema.yml`.
+- [x] Point Module 10 at it instead of `stg_ecommerce_customers` — done,
+      see Module 10 section above.
 
-**Module 8 — SCD2** (`models/history/dim_crm_customers_scd2.sql`)
-- [ ] Sequence each `customer_id`'s versions by `updated_at`.
-- [ ] Derive `valid_from` / `valid_to` and an `is_current` flag.
-- [ ] Decide hand-rolled SQL vs. dbt's built-in snapshot feature.
-- [ ] Enable the model and point Module 10 at its current-row slice.
+**Module 8 — SCD2** (`models/history/dim_crm_customers_scd2.sql`) — done, see Module 8 section above
+- [x] Sequence each `customer_id`'s versions by `updated_at`.
+- [x] Derive `valid_from` / `valid_to` and an `is_current` flag.
+- [x] Decide hand-rolled SQL vs. dbt's built-in snapshot feature (hand-rolled
+      — see Module 8 section above for why).
+- [x] Enable the model.
+- [x] Add a formal test that each `customer_id` has exactly one
+      `is_current = true` row — done, as a singular test (cross-row
+      invariant, not a single-column property), see
+      `tests/assert_one_current_row_per_crm_customer.sql`.
+- [x] Point Module 10 at its current-row slice — done, see Module 10
+      section above.
 
-**Module 10 — reconciliation rules** (`models/marts/dim_customers_reconciled.sql`)
-- [ ] Normalize email as the join key between CRM and ecommerce.
-- [ ] Write precedence rules for conflicting fields (region vs. country,
+**Module 10 — reconciliation rules** (`models/marts/dim_customers_reconciled.sql`) — done, see Module 10 section above
+- [x] Normalize email as the join key between CRM and ecommerce (already
+      done upstream by both staging models — nothing extra needed here).
+- [x] Write precedence rules for conflicting fields (region vs. country,
       name format, etc).
-- [ ] Emit one row per resolved customer at a consistent grain.
-- [ ] Once live, revisit `daily_sales_summary` (Module 1) and consider
-      adding a real `target_region` param via a join through this table.
+- [x] Emit one row per resolved customer at a consistent grain.
+- [x] Read from `dedup_ecommerce_customers` (Module 7) and
+      `dim_crm_customers_scd2` WHERE `is_current` (Module 8) rather than the
+      raw staging models.
+- [x] Normalize CRM's ALL-CAPS name casing (e.g. `PRIYA IVANOV`) via a
+      hand-rolled title-case pass (no `initcap()` in this DuckDB version).
+- [x] Revisit `daily_sales_summary` (Module 1) and add a real `target_region`
+      param via a join through this table — done, see Module 1 section
+      above.
 
 **Module 12 continued — batch JSON validation/enrichment** (`models/staging/stg_customer_events.sql`)
 - [ ] Decide how to surface the 9991-9993 orphan events (flag column vs.

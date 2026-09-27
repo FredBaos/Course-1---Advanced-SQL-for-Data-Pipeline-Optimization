@@ -26,10 +26,19 @@
                          filter is applied. Any other value both filters to
                          that category AND turns on the high_value_sales
                          breakdown column (see below).
+  target_region        : 'All' | 'North' | 'South' | 'East' | 'West' |
+                         'USA' | 'Canada' | 'Mexico' (whatever
+                         dim_customers_reconciled.resolved_region actually
+                         contains). 'All' (default) means no regional join
+                         happens at all -- same "absent, not just null"
+                         pattern as target_category/high_value_sales below.
+                         Any other value joins to dim_customers_reconciled
+                         on customer_id, filters to that resolved_region,
+                         and adds a resolved_region output column.
   high_value_threshold : numeric, default 300. Dollar amount used by
                          high_value_sales as the "big-ticket order" cutoff.
 
-  CONDITIONAL COLUMN
+  CONDITIONAL COLUMNS
   ---------------------------------------------------------
   high_value_sales : Only present in the output when target_category !=
                       'All'. Sum of total_amount for orders over
@@ -38,37 +47,55 @@
                       null -- the column itself doesn't exist) when
                       target_category = 'All', since it's only meaningful
                       once you've drilled into a single category.
+  resolved_region  : Only present when target_region != 'All' -- same
+                      "absent, not null" convention as high_value_sales.
 
-  WHY category INSTEAD OF region
+  WHY category, AND NOW ALSO region
   ---------------------------------------------------------
   The original course exercise parameterizes on region. This capstone's
-  `orders` seed deliberately has no region column -- region only lives on
+  `orders` seed deliberately has no region column -- region only lived on
   the messy, unreconciled `crm_customers` side (see README "Known issues"),
-  and joining through it now would fan out rows for the ~15% of customers
-  with duplicate CRM records. product_category stands in as the drill-down
-  dimension until the Module 10 reconciliation work makes a real regional
-  join meaningful.
+  and joining through it before Module 10 would have fanned out rows for
+  the ~15% of customers with duplicate CRM records. product_category stood
+  in as the drill-down dimension until Module 10's dim_customers_reconciled
+  existed. Now that it does (customer_id -> resolved_region, one row per
+  customer, no fan-out), target_region joins through it -- confirmed via
+  dev.duckdb that every order's customer_id resolves to exactly one row in
+  dim_customers_reconciled (220 orders in, 220 out), so the join never
+  drops or duplicates a row. target_category remains the primary drill-down
+  dimension; target_region is additive, not a replacement.
 */
 
 {% set start_date = modules.datetime.datetime.strptime(var('analysis_date'), '%Y-%m-%d').date() %}
 {% set end_date = start_date + modules.datetime.timedelta(days=(var('date_range_days', 1) | int) - 1) %}
+{% set region_filter_active = var('target_region', 'All') != 'All' %}
 
 SELECT
-    order_date,
-    product_category,
-    COUNT(*)              AS order_count,
-    SUM(total_amount)     AS total_sales,
-    AVG(total_amount)     AS avg_order_value
-    {% if var('target_category') != 'All' %}
-    , SUM(CASE WHEN total_amount > {{ var('high_value_threshold', 300) }} THEN total_amount ELSE 0 END) AS high_value_sales
+    o.order_date,
+    o.product_category,
+    {% if region_filter_active %}
+    c.resolved_region,
     {% endif %}
-FROM {{ ref('stg_orders') }}
-WHERE order_date BETWEEN '{{ start_date }}' AND '{{ end_date }}'
-  AND status = '{{ var('order_status') }}'
+    COUNT(*)              AS order_count,
+    SUM(o.total_amount)   AS total_sales,
+    AVG(o.total_amount)   AS avg_order_value
+    {% if var('target_category') != 'All' %}
+    , SUM(CASE WHEN o.total_amount > {{ var('high_value_threshold', 300) }} THEN o.total_amount ELSE 0 END) AS high_value_sales
+    {% endif %}
+FROM {{ ref('stg_orders') }} AS o
+{% if region_filter_active %}
+JOIN {{ ref('dim_customers_reconciled') }} AS c ON c.customer_id = o.customer_id
+{% endif %}
+WHERE o.order_date BETWEEN '{{ start_date }}' AND '{{ end_date }}'
+  AND o.status = '{{ var('order_status') }}'
   {% if var('target_category') != 'All' %}
-  AND product_category = '{{ var('target_category') }}'
+  AND o.product_category = '{{ var('target_category') }}'
   {% endif %}
-GROUP BY order_date, product_category
+  {% if region_filter_active %}
+  AND c.resolved_region = '{{ var('target_region') }}'
+  {% endif %}
+GROUP BY o.order_date, o.product_category
+{%- if region_filter_active %}, c.resolved_region{% endif %}
 {% if target.name == 'dev' %}
 LIMIT 100 -- keep local dev runs fast/cheap
 {% endif %}

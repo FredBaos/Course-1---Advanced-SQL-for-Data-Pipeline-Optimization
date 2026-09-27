@@ -1,0 +1,12 @@
+models:
+  - name: dedup_ecommerce_customers
+    description: >
+      Module 7 — ecommerce_customers deduplicated via a checksum over its
+      business columns. row_checksum unique means the dedup actually
+      collapsed every accidental duplicate; a failure here means two rows
+      that should have been treated as the same customer weren't.
+    columns:
+      - name: row_checksum
+        data_tests:
+          - unique
+          - not_null
