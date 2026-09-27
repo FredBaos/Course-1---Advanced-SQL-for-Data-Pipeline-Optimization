@@ -33,8 +33,9 @@
   matching CRM record. name: CRM first_name+last_name, else ecommerce
   full_name. phone: CRM phone, else ecommerce phone. region/country are
   different taxonomies, not just formatting drift -- kept as separate raw
-  columns for transparency, plus a merged resolved_region for the future
-  target_region join (Module 1 TODO).
+  columns for transparency, plus a merged resolved_region that
+  daily_sales_summary.sql (Module 1) now joins through via its
+  target_region param.
 
   NAME CASING
   -----------------
@@ -57,11 +58,8 @@
   side) resolves to the CRM phone. Customer 1045 (CRM casing issue,
   "PRIYA IVANOV") now resolves to "Priya Ivanov".
 
-  STILL OPEN
-  -----------------
-  [ ] Revisit daily_sales_summary (Module 1) and consider adding a real
-      target_region param via a join through this table, now that
-      resolved_region exists.
+  Downstream: daily_sales_summary.sql (Module 1) reads resolved_region via
+  its target_region param -- done, see README Module 1 section.
 */
 
 WITH crm_current AS (

@@ -7,19 +7,21 @@ module's concept gets applied here as a real piece of the pipeline, instead
 of staying a one-off exercise. Targets DuckDB locally — no server/cloud
 setup required.
 
-## Current state: raw layer + parameterized mart + checksum dedup + SCD2 history + reconciled customer identity
+## Current state: every planned module is implemented
 
 The repo has synthetic "messy" source data, light staging models
-(typing/trimming only — reconciliation/history logic lives downstream, not
-at the staging layer), a mart model that applies the Module 1 (parameterized
-pipelines) and Module 4 (env/config-driven generation) concepts together,
-a cleansing model that applies Module 7 (checksums) to collapse
-`ecommerce_customers`' exact-duplicate rows, a history model that applies
-Module 8 (SCD2) to turn `crm_customers`' overwrite-in-place changes into a
-proper versioned dimension, and a reconciliation mart that applies Module 10
-to resolve both customer sources into one identity per real person. That's
-intentional: the mess is the point, and each module cleans up (or enriches)
-one more piece of it.
+(typing/trimming only, plus Module 12's JSON validation/enrichment on the
+events staging model — reconciliation/history logic itself still lives
+downstream, not at the staging layer), a mart model that applies the
+Module 1 (parameterized pipelines) and Module 4 (env/config-driven
+generation) concepts together, a cleansing model that applies Module 7
+(checksums) to collapse `ecommerce_customers`' exact-duplicate rows, a
+history model that applies Module 8 (SCD2) to turn `crm_customers`'
+overwrite-in-place changes into a proper versioned dimension, and a
+reconciliation mart that applies Module 10 to resolve both customer
+sources into one identity per real person. That's intentional: the mess
+was the point, and each module cleaned up (or enriched) one more piece
+of it.
 
 ```
 .
@@ -37,7 +39,7 @@ one more piece of it.
     │   ├── stg_crm_customers.sql        # trim/cast only, duplicates preserved
     │   ├── stg_ecommerce_customers.sql  # trim/cast only, not reconciled
     │   ├── stg_orders.sql               # trim/cast only
-    │   └── stg_customer_events.sql      # flattens JSON; Module 12 TODOs inline
+    │   └── stg_customer_events.sql      # Module 12 — JSON validation/enrichment, done
     ├── marts/
     │   ├── daily_sales_summary.sql      # Module 1 — parameterized via dbt vars, done (incl. target_region via Module 10)
     │   └── dim_customers_reconciled.sql # Module 10 — reconciliation rules, done
@@ -48,12 +50,9 @@ one more piece of it.
         └── dim_crm_customers_scd2.sql   # Module 8 — SCD2 history, done
 ```
 
-All three of the `# Module N — TODO skeleton` placeholder files (Module 7,
-8, 10) are now implemented, enabled, and tested. Only Module 12's
-inline-TODO enrichment (`stg_customer_events.sql` — already enabled, just
-missing orphan-event handling and validation) remains. See Module 7, 8, or
-10 below for a worked example of the skeleton → real-logic pattern, if
-that's useful reference for Module 12.
+All four planned modules (7, 8, 10, 12) are now implemented, enabled, and
+verified. See Module 7, 8, 10, or 12 below for the skeleton → real-logic
+pattern each one followed.
 
 ## Setting up the project from scratch
 
@@ -519,6 +518,93 @@ genuinely conflicting values on both sides is what verifies the precedence
 all-uppercase check verifies the title-case normalization actually caught
 every affected row, not just the one spot-checked.
 
+## Module 12 — batch JSON validation & enrichment (`stg_customer_events`)
+
+`data/raw_json/*.json` is one file per day, event objects with a nested
+`metadata` struct. `stg_customer_events.sql` flattens it and adds three
+things: a normalized `event_type`, a normalized `device`, and an
+`is_orphan_customer` flag for the handful of events whose `customer_id`
+(9991-9993) doesn't exist in `crm_customers` at all.
+
+```sql
+SELECT
+    e.event_id,
+    e.customer_id,
+    CASE
+        WHEN LOWER(TRIM(e.event_type)) IN ('page_view', 'login', 'logout', 'add_to_cart', 'checkout_start')
+        THEN LOWER(TRIM(e.event_type))
+        ELSE 'unknown'
+    END AS event_type,
+    CAST(e.event_ts AS TIMESTAMP) AS event_ts,
+    CASE
+        WHEN LOWER(TRIM(e.metadata.device)) IN ('desktop', 'mobile', 'tablet')
+        THEN LOWER(TRIM(e.metadata.device))
+        ELSE 'unknown'
+    END AS device,
+    COALESCE(NULLIF(TRIM(e.metadata.ip_country), ''), 'unknown') AS ip_country,
+    NOT EXISTS (
+        SELECT 1 FROM {{ ref('stg_crm_customers') }} c
+        WHERE c.customer_id = e.customer_id
+    ) AS is_orphan_customer
+FROM read_json_auto('data/raw_json/*.json') AS e
+```
+
+- **`event_type` / `device`**: each a closed, known set (5 and 3 values
+  respectively) — normalized to lowercase/trimmed, with anything outside
+  the known set falling back to `'unknown'` as a defensive guard against
+  *future* bad data. Checked all three raw JSON files directly: every row
+  already matches the known set exactly, so this isn't fixing anything
+  broken today, it's guarding against data that doesn't exist yet.
+- **`ip_country`**: no fixed enum here (any country name is valid, unlike
+  `device`), so it's only null/blank-guarded via `COALESCE(NULLIF(...))`,
+  not validated against a list.
+- **`is_orphan_customer`**: a flag column, not a separate quarantine
+  model — the 9991-9993 orphans are a known, small, intentional feature of
+  this data (not noise to silently drop), so keeping them in the same
+  table with a flag lets downstream models decide whether to include or
+  exclude them, rather than making that decision here.
+- **Verified**: 55 rows total, 7 flagged `is_orphan_customer` (9991 ×2,
+  9992 ×2, 9993 ×3 — matching the known orphan set exactly), zero rows
+  with `device`/`event_type`/`ip_country` = `'unknown'`.
+
+**Gotcha worth knowing**: DuckDB supports *nested* block comments, so a
+literal `/*` appearing anywhere inside this model's `/* ... */` docstring
+— even inside plain prose, e.g. writing out the path
+`data/raw_json/*.json` — opens a second nested comment level that the
+docstring's single closing `*/` doesn't close, silently commenting out the
+entire `SELECT` below it and failing with "unterminated comment." Avoid
+writing a literal `/*` sequence inside any `/* */` docstring in this repo
+(here, that meant rewording the path reference to
+`data/raw_json/ (*.json files)` instead).
+
+Model is enabled (`dbt run` builds it).
+
+### Testing this one
+
+```bash
+dbt compile --profiles-dir . --select stg_customer_events
+dbt run --profiles-dir . --select stg_customer_events
+```
+
+```python
+import duckdb
+con = duckdb.connect("dev.duckdb")
+
+print(con.sql("SELECT COUNT(*) FROM stg_customer_events").fetchone()[0])   # 55
+
+con.sql("""
+    SELECT customer_id, COUNT(*) FROM stg_customer_events
+    WHERE is_orphan_customer GROUP BY 1 ORDER BY 1
+""").show()   # 9991: 2, 9992: 2, 9993: 3
+
+# nothing should currently fall into the 'unknown' fallback -- if it does,
+# either the source data changed or the known-value sets above need updating
+con.sql("""
+    SELECT COUNT(*) FROM stg_customer_events
+    WHERE device = 'unknown' OR event_type = 'unknown' OR ip_country = 'unknown'
+""").show()   # should be 0
+```
+
 ## Known issues in the raw data (deliberate — this is the point)
 
 **`crm_customers`**
@@ -548,15 +634,16 @@ dedup step (Module 7) collapses.
   regional analysis requires joining through the customer dimension, which
   is the point: it forces the reconciliation work to matter downstream, not
   just as an academic exercise. `dim_customers_reconciled` (Module 10) now
-  provides a `resolved_region`, but `daily_sales_summary` (Module 1) hasn't
-  been rewired to use it yet — still parameterizes on `product_category`.
+  provides a `resolved_region`, and `daily_sales_summary` (Module 1) joins
+  through it via its `target_region` param.
 
 **`data/raw_json/events_*.json`**
 - One file per day, array of event objects with a nested `metadata` object
-  (`device`, `ip_country`) — needs flattening, handled in
-  `stg_customer_events.sql` via DuckDB's `read_json_auto`.
+  (`device`, `ip_country`) — flattened, validated, and enriched in
+  `stg_customer_events.sql` via DuckDB's `read_json_auto` (Module 12).
 - A handful of events reference `customer_id` 9991-9993, which don't exist
-  in `crm_customers` — orphan records, left unresolved on purpose.
+  in `crm_customers` — orphan records, flagged via `is_orphan_customer`
+  rather than dropped or quarantined separately.
 
 ## Roadmap (fill in as each module is covered)
 
@@ -567,9 +654,7 @@ dedup step (Module 7) collapses.
 | Checksums (Module 7) | done | `models/cleansing/dedup_ecommerce_customers.sql` |
 | SCD2 (Module 8) | done | `models/history/dim_crm_customers_scd2.sql` |
 | Reconciliation rules (Module 10) | done | `models/marts/dim_customers_reconciled.sql` |
-| Batch JSON transformation (Module 12) | staging done, enrichment TODO | `models/staging/stg_customer_events.sql` (TODO comment inline) |
-
-Need to update map given progress — it's the map of what's real vs. still ahead.
+| Batch JSON transformation (Module 12) | done | `models/staging/stg_customer_events.sql` |
 
 ## TODO checklist per module (not yet done)
 
@@ -615,8 +700,14 @@ listed — this is just the quick-scan version.
       param via a join through this table — done, see Module 1 section
       above.
 
-**Module 12 continued — batch JSON validation/enrichment** (`models/staging/stg_customer_events.sql`)
-- [ ] Decide how to surface the 9991-9993 orphan events (flag column vs.
-      quarantine model).
-- [ ] Validate `metadata.device` / `metadata.ip_country`.
-- [ ] Consider normalizing `event_type`.
+**Module 12 continued — batch JSON validation/enrichment** (`models/staging/stg_customer_events.sql`) — done, see Module 12 section above
+- [x] Decide how to surface the 9991-9993 orphan events — a flag column
+      (`is_orphan_customer`), not a separate quarantine model.
+- [x] Validate `metadata.device` / `metadata.ip_country` — `device`
+      normalized against a known set with an `'unknown'` fallback;
+      `ip_country` null/blank-guarded only (no fixed enum).
+- [x] Normalize `event_type` — same known-set + `'unknown'`-fallback
+      pattern as `device`.
+
+All four planned modules (7, 8, 10, 12) are now done — nothing left on
+this checklist.
