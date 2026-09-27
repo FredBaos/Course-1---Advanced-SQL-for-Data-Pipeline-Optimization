@@ -68,12 +68,9 @@ only need to do this once per machine (or whenever `.venv` gets wiped).
 
 1. **Get the code.**
    ```bash
-   git clone https://github.com/FredBaos/Course-1---Advanced-SQL-for-Data-Pipeline-Optimization.git dbt-messy-data-lab
+   git clone https://github.com/FredBaos/dbt-messy-data-lab.git
    cd dbt-messy-data-lab
    ```
-   (The GitHub repo itself is still under its original name as of this
-   writing — clone target renames it locally. Update this URL if/when the
-   remote repo gets renamed too.)
 
 2. **Create and activate a virtual environment.**
    ```bash
