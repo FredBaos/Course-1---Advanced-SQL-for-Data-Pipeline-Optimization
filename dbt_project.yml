@@ -1,8 +1,8 @@
-name: 'capstone_pipeline'
+name: 'dbt_messy_data_lab'
 version: '1.0.0'
 config-version: 2
 
-profile: 'capstone_pipeline'
+profile: 'dbt_messy_data_lab'
 
 model-paths: ["models"]
 seed-paths: ["seeds"]
@@ -15,7 +15,7 @@ clean-targets:
   - "dbt_packages"
 
 models:
-  capstone_pipeline:
+  dbt_messy_data_lab:
     staging:
       +materialized: view
     marts:

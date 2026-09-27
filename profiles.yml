@@ -1,4 +1,4 @@
-capstone_pipeline:
+dbt_messy_data_lab:
   target: dev
   outputs:
     dev:

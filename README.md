@@ -1,11 +1,16 @@
-# Capstone Project — Course 1 - Advanced SQL for Data Pipeline Optimization
+# dbt Messy Data Lab
 
-This project has been built as inspiration from the first course of the Coursera "Level Up: Advanced SQL for Data Engineering" certification: "Advanced SQL for Data Pipeline Optimization".
+A hands-on dbt + DuckDB project for working through real data-pipeline
+problems — deduplication, slowly changing dimensions, identity
+reconciliation, batch JSON validation — on deliberately messy synthetic
+data, rather than as isolated one-off exercises. Targets DuckDB locally —
+no server/cloud setup required.
 
-A running project built up module by module across the specialization. Each
-module's concept gets applied here as a real piece of the pipeline, instead
-of staying a one-off exercise. Targets DuckDB locally — no server/cloud
-setup required.
+Originally started as inspiration from the first course of the Coursera
+"Level Up: Advanced SQL for Data Engineering" certification: "Advanced SQL
+for Data Pipeline Optimization" — the module numbering below (1, 4, 7, 8,
+10, 12) still reflects that course's structure, though this repo has since
+grown into its own standalone project.
 
 ## Current state: every planned module is implemented
 
@@ -63,9 +68,12 @@ only need to do this once per machine (or whenever `.venv` gets wiped).
 
 1. **Get the code.**
    ```bash
-   git clone https://github.com/FredBaos/Course-1---Advanced-SQL-for-Data-Pipeline-Optimization.git
-   cd "Course-1---Advanced-SQL-for-Data-Pipeline-Optimization"
+   git clone https://github.com/FredBaos/Course-1---Advanced-SQL-for-Data-Pipeline-Optimization.git dbt-messy-data-lab
+   cd dbt-messy-data-lab
    ```
+   (The GitHub repo itself is still under its original name as of this
+   writing — clone target renames it locally. Update this URL if/when the
+   remote repo gets renamed too.)
 
 2. **Create and activate a virtual environment.**
    ```bash
@@ -173,7 +181,7 @@ top of the model file.
 
 ## Module 4 — env/config-driven generation (dev vs. prod targets)
 
-`profiles.yml` now defines two targets under the `capstone_pipeline`
+`profiles.yml` now defines two targets under the `dbt_messy_data_lab`
 profile: `dev` (default, `dev.duckdb`, 4 threads) and `prod` (`prod.duckdb`,
 16 threads). Pick one with `--target`:
 
